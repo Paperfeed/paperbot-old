@@ -1,5 +1,4 @@
 import { Database } from "./Database";
-import { User }     from "./DB/Entity/User";
 import { SteamAPI } from "./API/SteamAPI";
 import { Client }   from "eris";
 

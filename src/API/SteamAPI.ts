@@ -229,7 +229,7 @@ export class SteamAPI {
     }
 
 
-    async getUserSummary(steamId : UserInfo) {
+    async getUserSummary(steamId) : Promise<UserInfo> {
         const data = await fetchAsync(this.STEAM_BUILD_API_REQUEST(
             this.STEAM_API_HOST,
             '/ISteamUser/GetPlayerSummaries/v0001/',
@@ -241,7 +241,7 @@ export class SteamAPI {
         if (data && data.response.players.player.length) {
             return data.response.players.player[0]
         } else {
-            return false;
+            return null;
         }
     }
 

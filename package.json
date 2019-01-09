@@ -2,7 +2,6 @@
   "name": "paperbot",
   "version": "1.0.0",
   "description": "A Discord bot",
-  "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc -v && npm run clean && npm run tslint && npm run build-ts",
