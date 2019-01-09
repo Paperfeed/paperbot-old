@@ -1,0 +1,53 @@
+{
+  "name": "paperbot",
+  "version": "1.0.0",
+  "description": "A Discord bot",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc -v && npm run clean && npm run tslint && npm run build-ts",
+    "build-ts": "tsc",
+    "watch": "nodemon %NODE_DEBUG_OPTION% --exec ts-node src/index.ts",
+    "debug": "nodemon --exec node %NODE_DEBUG_OPTION% --inspect -r ts-node/register ./src/index.ts",
+    "clean": "rimraf dist",
+    "tslint": "tslint -c tslint.json -p tsconfig.json",
+    "tslint:fix": "tslint --fix src/**/*.{ts,js}",
+    "test": "NODE_ENV=test mocha -r ts-node/register src/tests/*.spec.ts --exit"
+  },
+  "dependencies": {
+    "dotenv": "^6.2.0",
+    "eris": "^0.9.0",
+    "node-fetch": "^2.3.0",
+    "reflect-metadata": "^0.1.12",
+    "sqlite3": "^4.0.4",
+    "typeorm": "^0.2.11"
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.18",
+    "@types/dotenv": "^6.1.0",
+    "typescript": "^3.2.2",
+    "ts-node": "^7.0.1",
+    "rimraf": "^2.6.3",
+    "mocha": "^5.2.0",
+    "tslint": "^5.12.0",
+    "nodemon": "^1.18.9"
+  },
+  "engines": {
+    "node": "8.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Paperfeed/paperbot.git"
+  },
+  "keywords": [
+    "discord",
+    "nodejs",
+    "eris"
+  ],
+  "author": "Aldert Vaandering",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Paperfeed/paperbot/issues"
+  },
+  "homepage": "https://github.com/Paperfeed/paperbot#readme"
+}
