@@ -14,7 +14,7 @@ const Game_1 = require("./Game");
 let Trailer = class Trailer {
 };
 __decorate([
-    typeorm_1.PrimaryColumn(),
+    typeorm_1.PrimaryGeneratedColumn(),
     __metadata("design:type", Number)
 ], Trailer.prototype, "id", void 0);
 __decorate([
@@ -34,7 +34,7 @@ __decorate([
     __metadata("design:type", Game_1.Game)
 ], Trailer.prototype, "game", void 0);
 Trailer = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity("trailers")
 ], Trailer);
 exports.Trailer = Trailer;
 //# sourceMappingURL=Trailer.js.map

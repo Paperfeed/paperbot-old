@@ -6,96 +6,97 @@ import { Publisher }                                                       from 
 import { Developer }                                                       from "./Developer";
 import { Trailer }                                                         from "./Trailer";
 
-@Entity()
+
+@Entity("games")
 export class Game {
     @PrimaryColumn()
-    appid: number;
+    id : number;
 
     @Column({nullable: true})
-    type: string;
+    type : string;
 
     @Column({nullable: true})
-    name: string;
+    name : string;
 
     @Column({nullable: true})
-    requiredAge: number;
+    requiredAge : number;
 
     @Column({nullable: true})
-    iconUrl: string;
+    iconUrl : string;
 
     @Column({nullable: true})
-    logoUrl: string;
+    logoUrl : string;
 
     @Column({nullable: true})
-    detailedDescription: string;
+    detailedDescription : string;
 
     @Column({nullable: true})
-    longDescription: string;
+    longDescription : string;
 
     @Column({nullable: true})
-    shortDescription: string;
+    shortDescription : string;
 
     @Column({nullable: true})
-    languages: string;
+    languages : string;
 
     @Column({nullable: true})
-    headerImage: string;
+    headerImage : string;
 
     @Column({nullable: true})
-    website: string;
+    website : string;
 
     @Column({nullable: true})
-    score: number;
+    score : number;
 
     @Column({nullable: true})
-    recommendations: number;
+    recommendations : number;
 
     @Column({nullable: true})
-    achievements: number;
+    achievements : number;
 
     @Column({nullable: true})
-    releaseDate: string;
+    releaseDate : string;
 
     @Column({nullable: true})
-    supportUrl: string;
+    supportUrl : string;
 
     @Column({nullable: true})
-    supportEmail: string;
+    supportEmail : string;
 
     @Column({nullable: true})
-    background: string;
+    background : string;
 
     @Column({nullable: true})
-    controllerSupport: string;
+    controllerSupport : string;
 
     @Column({nullable: true})
-    drm: string;
+    drm : string;
 
     @ManyToMany(type => Genre, genre => genre.games, {eager: true})
     @JoinTable()
-    genres: Genre[];
+    genres : Genre[];
 
     @ManyToMany(type => Category, category => category.games, {eager: true})
     @JoinTable()
-    categories: Category[];
-    
+    categories : Category[];
+
     @ManyToMany(type => Publisher, publisher => publisher.games)
     @JoinTable()
-    publishers: Promise<Publisher[]>;
+    publishers : Promise<Publisher[]>;
 
     @ManyToMany(type => Developer, developer => developer.games)
     @JoinTable()
-    developers: Promise<Developer[]>;
+    developers : Promise<Developer[]>;
 
     @OneToMany(type => Screenshot, screenshot => screenshot.game)
-    screenshots: Promise<Screenshot[]>;
+    screenshots : Promise<Screenshot[]>;
 
     @OneToMany(type => Trailer, trailer => trailer.game)
-    trailers: Promise<Trailer[]>;
+    trailers : Promise<Trailer[]>;
 
     @Column({nullable: true})
-    lastUpdate: number;
+    lastUpdate : number;
 
     @Column({nullable: true})
-    hasContent: boolean;
+    hasContent : boolean;
 }

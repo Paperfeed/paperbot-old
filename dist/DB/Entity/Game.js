@@ -21,7 +21,7 @@ let Game = class Game {
 __decorate([
     typeorm_1.PrimaryColumn(),
     __metadata("design:type", Number)
-], Game.prototype, "appid", void 0);
+], Game.prototype, "id", void 0);
 __decorate([
     typeorm_1.Column({ nullable: true }),
     __metadata("design:type", String)
@@ -139,7 +139,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Game.prototype, "hasContent", void 0);
 Game = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity("games")
 ], Game);
 exports.Game = Game;
 //# sourceMappingURL=Game.js.map

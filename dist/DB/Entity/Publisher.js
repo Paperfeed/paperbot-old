@@ -14,11 +14,11 @@ const Game_1 = require("./Game");
 let Publisher = class Publisher {
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn(),
+    typeorm_1.PrimaryColumn(),
     __metadata("design:type", Number)
 ], Publisher.prototype, "id", void 0);
 __decorate([
-    typeorm_1.Column(),
+    typeorm_1.Column({ unique: true }),
     __metadata("design:type", String)
 ], Publisher.prototype, "name", void 0);
 __decorate([
@@ -26,7 +26,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Publisher.prototype, "games", void 0);
 Publisher = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity("publishers")
 ], Publisher);
 exports.Publisher = Publisher;
 //# sourceMappingURL=Publisher.js.map

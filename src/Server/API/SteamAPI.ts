@@ -34,9 +34,9 @@ export class SteamAPI {
         this.STEAM_API_KEY = process.env.STEAM_API_KEY;
         this.database = Database.Instance;
         this.updateStack = [];
-        this.initializeDatabase();
-
         this.updateGameInfo = this.updateGameInfo.bind(this);
+
+        this.initializeDatabase();
     }
 
 
@@ -54,7 +54,7 @@ export class SteamAPI {
         for (let game of gameData) {
             let dbEntry = new Game();
 
-            dbEntry.appid = game.appid;
+            dbEntry.id = game.appid;
             dbEntry.name = game.name;
 
             gameArray.push(game);
@@ -68,14 +68,14 @@ export class SteamAPI {
             console.log(`Updating ${this.updateStack.length} games without content...`);
         }
 
-        this.updateGameInfo();
+       this.updateGameInfo();
     }
 
 
     async updateGameInfo() {
         if (this.updateStack.length) {
             const game = this.updateStack.pop();
-            const steamData = await this.getGameInfo(game.appid);
+            const steamData = await this.getGameInfo(game.id);
 
             if (!steamData) {
                 // Something went wrong with fetching steamAPI data

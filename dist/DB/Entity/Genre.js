@@ -14,7 +14,7 @@ const Game_1 = require("./Game");
 let Genre = class Genre {
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn(),
+    typeorm_1.PrimaryColumn(),
     __metadata("design:type", Number)
 ], Genre.prototype, "id", void 0);
 __decorate([
@@ -26,7 +26,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Genre.prototype, "games", void 0);
 Genre = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity("genres")
 ], Genre);
 exports.Genre = Genre;
 //# sourceMappingURL=Genre.js.map

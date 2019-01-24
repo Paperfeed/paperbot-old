@@ -30,7 +30,7 @@ __decorate([
     __metadata("design:type", Game_1.Game)
 ], Screenshot.prototype, "game", void 0);
 Screenshot = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity("screenshots")
 ], Screenshot);
 exports.Screenshot = Screenshot;
 //# sourceMappingURL=Screenshot.js.map

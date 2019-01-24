@@ -32,8 +32,8 @@ class SteamAPI {
         this.STEAM_API_KEY = process.env.STEAM_API_KEY;
         this.database = Database_1.Database.Instance;
         this.updateStack = [];
-        this.initializeDatabase();
         this.updateGameInfo = this.updateGameInfo.bind(this);
+        this.initializeDatabase();
     }
     static get Instance() {
         return this._instance || (this._instance = new this());
@@ -43,9 +43,9 @@ class SteamAPI {
             console.log("Retrieving list of all apps on Steam...");
             const gameData = yield this.getAllGames();
             const gameArray = [];
-            for (let game of gameData.applist.apps) {
+            for (let game of gameData) {
                 let dbEntry = new Game_1.Game();
-                dbEntry.appid = game.appid;
+                dbEntry.id = game.appid;
                 dbEntry.name = game.name;
                 gameArray.push(game);
             }
@@ -61,7 +61,7 @@ class SteamAPI {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.updateStack.length) {
                 const game = this.updateStack.pop();
-                const steamData = yield this.getGameInfo(game.appid);
+                const steamData = yield this.getGameInfo(game.id);
                 if (!steamData) {
                     // Something went wrong with fetching steamAPI data
                     console.log("Something went wrong fetching game data. Skipping ", game.name);
@@ -69,7 +69,7 @@ class SteamAPI {
                     setTimeout(this.updateGameInfo, 1000);
                     return;
                 }
-                else if (steamData === "invalidId") {
+                else if (steamData.type === "invalid") {
                     // Sometimes steam doesn't seem to have info on a game
                     game.hasContent = true;
                     game.lastUpdate = Date.now();
@@ -166,9 +166,9 @@ class SteamAPI {
                 game.genres = genres;
                 game.screenshots = Promise.resolve(screenshots);
                 game.trailers = Promise.resolve(trailers);
-                game.score = steamData.metacritic !== undefined ? parseInt(steamData.metacritic.score) : null;
-                game.recommendations = steamData.recommendations !== undefined ? parseInt(steamData.recommendations.total) : null;
-                game.achievements = steamData.achievements !== undefined ? parseInt(steamData.achievements.total) : null;
+                game.score = steamData.metacritic !== undefined ? steamData.metacritic.score : null;
+                game.recommendations = steamData.recommendations !== undefined ? steamData.recommendations.total : null;
+                game.achievements = steamData.achievements !== undefined ? steamData.achievements.total : null;
                 game.releaseDate = steamData.release_date !== undefined ? steamData.release_date.date : null;
                 game.supportUrl = steamData.support_info !== undefined ? steamData.support_info.url : null;
                 game.supportEmail = steamData.support_info !== undefined ? steamData.support_info.email : null;
@@ -183,16 +183,8 @@ class SteamAPI {
     }
     getAllGames() {
         return __awaiter(this, void 0, void 0, function* () {
-            /*
-            *  Returns object
-            *       applist: object
-            *           apps: array
-            *               [app]
-            *                   appid
-            *                   name
-            *
-            */
-            return utils_1.fetchAsync(this.STEAM_API_HOST + '/ISteamApps/GetAppList/v2/');
+            const data = yield utils_1.fetchAsync(this.STEAM_API_HOST + '/ISteamApps/GetAppList/v2/');
+            return data ? data.applist.apps : null;
         });
     }
     getUserID(username) {
@@ -204,33 +196,12 @@ class SteamAPI {
                 return data.response.steamid;
             }
             else {
-                return false;
+                return null;
             }
         });
     }
     getUserSummary(steamId) {
         return __awaiter(this, void 0, void 0, function* () {
-            /*
-            * Returns object
-            *       players: object
-            *           player: array
-            *               steamid: "76561198205290651",
-            *               communityvisibilitystate: 3,
-            *               profilestate: 1,
-            *               personaname: "aldertsjoerdbuist",
-            *               lastlogoff: 1546638143,
-            *               profileurl: "https://steamcommunity.com/id/aldert/",
-            *               avatar: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/e8/e8faa4f3e240c4798188b57e21205acfd030bc30.jpg",
-            *               avatarmedium: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/e8/e8faa4f3e240c4798188b57e21205acfd030bc30_medium.jpg",
-            *               avatarfull: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/e8/e8faa4f3e240c4798188b57e21205acfd030bc30_full.jpg",
-            *               personastate: 0,
-            *               realname: "aldert",
-            *               primaryclanid: "103582791429521408",
-            *               timecreated: 1436007942,
-            *               personastateflags: 0,
-            *               loccountrycode: "NL",
-            *               locstatecode: "11"
-            */
             const data = yield utils_1.fetchAsync(this.STEAM_BUILD_API_REQUEST(this.STEAM_API_HOST, '/ISteamUser/GetPlayerSummaries/v0001/', {
                 steamids: steamId
             }));
@@ -238,129 +209,42 @@ class SteamAPI {
                 return data.response.players.player[0];
             }
             else {
-                return false;
+                return null;
             }
         });
     }
-    getUserGames(userId) {
+    getUserGames(userId, withAppInfo = 1, freeGames = 1) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield utils_1.fetchAsync(this.STEAM_BUILD_API_REQUEST(this.STEAM_API_HOST, '/IPlayerService/GetOwnedGames/v0001/', {
+            const data = yield utils_1.fetchAsync(this.STEAM_BUILD_API_REQUEST(this.STEAM_API_HOST, '/IPlayerService/GetOwnedGames/v0001/', {
                 steamid: userId,
-                include_appinfo: 1,
-                include_played_free_games: 1,
+                include_appinfo: withAppInfo,
+                include_played_free_games: freeGames,
                 format: 'json'
             }));
+            if (data && data.response.games.length) {
+                return data.response.games;
+            }
+            else {
+                return null;
+            }
         });
     }
     getGameInfo(appid, filters = '') {
         return __awaiter(this, void 0, void 0, function* () {
-            /*
-            // Can filter which data to retrieve
-            // By default we retrieve the following object:
-            //
-            //      [appid]: object
-            //          success: boolean
-            //          data: object
-            //              type: string <game/?>
-            //              name: string
-            //              steam_appid: integer
-            //              required_age: integer
-            //              is_free: boolean
-            //              controller_support: string <full/?>
-            //              dlc: array
-            //                  [appid]
-            //              detailed_description: string
-            //              about_the_game: string
-            //              short_description: string
-            //              supported_languages: string
-            //              header_image: url
-            //              website: url
-            //              pc_requirements: object
-            //                  minimum: string
-            //                  recommended: string
-            //              mac_requirements: object
-            //                  empty
-            //              linux_requirements: object
-            //                  empty
-            //              legal_notice: string
-            //              developers: array
-            //                  [developer name]
-            //              publishers: array
-            //                  [developer name]
-            //              price_overview: object
-            //                  currency: string <eg. CNY, USD>
-            //                  initial: integer
-            //                  final: integer
-            //                  discount_percent: integer
-            //              packages: array
-            //                  [appid]
-            //              package_groups: object
-            //                  name/title/description/selection_text/save_text/is_recurring_subscription/subs:object
-            //              platforms: object
-            //                  windows: boolean
-            //                  mac: boolean
-            //                  linux: boolean
-            //              categories: array
-            //                  [
-            //                      id: integer
-            //                      description: string <Single-player/Steam Achievements/Full controller support/etc>
-            //                  ]
-            //              genres: array
-            //                  [
-            //                      id: integer
-            //                      description: string <Action/Adventure/etc>
-            //                  ]
-            //              screenshots: array
-            //                  [
-            //                      id: integer
-            //                      path_thumbnail: url
-            //                      path_full: url
-            //                  ]
-            //              movies: array
-            //                  [
-            //                      id: integer
-            //                      name: string
-            //                      thumbnail: url
-            //                      webm: object
-            //                          480: url
-            //                          max: url
-            //                      highlight: boolean
-            //                  ]
-            //              recommendations: object
-            //                  total: integer
-            //              achievements:
-            //                  total: integer
-            //                  highlighted: array
-            //                      [
-            //                          name: string
-            //                          path: url <icon>
-            //                      ]
-            //              release_date: object
-            //                  coming_soon: boolean
-            //                  date: string
-            //              support_info: object
-            //                  url: url
-            //                  email: string
-            //              background: url
-            //              content_descriptors: object
-            //                  ids: array
-            //                      [id]
-            //                  notes: string
-            //
-            */
             const data = yield utils_1.fetchAsync(this.STEAM_BUILD_API_REQUEST(this.STEAM_STORE_API_HOST, '/api/appdetails', {
                 appids: appid,
                 filters: filters
-            })).catch(e => console.log("Encountered an error: ", e));
-            if (data[appid].success) {
+            })).catch(() => {
+            });
+            if (data && data[appid].success) {
                 return data[appid].data;
             }
             else if (data[appid].success === false) {
                 // No info on this AppId return invalid
-                return "invalidId";
+                return { type: "invalid" };
             }
             else {
-                return false;
+                return null;
             }
         });
     }

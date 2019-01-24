@@ -14,7 +14,7 @@ const Game_1 = require("./Game");
 let Category = class Category {
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn(),
+    typeorm_1.PrimaryColumn(),
     __metadata("design:type", Number)
 ], Category.prototype, "id", void 0);
 __decorate([
@@ -26,7 +26,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Category.prototype, "games", void 0);
 Category = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity("categories")
 ], Category);
 exports.Category = Category;
 //# sourceMappingURL=Category.js.map

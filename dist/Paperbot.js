@@ -36,6 +36,10 @@ class Paperbot {
                         this.historyStack = this.historyStack.filter(a => a !== action);
                     }
                 }
+                if (msg.content.startsWith('test')) {
+                    /*this.discord.getUser
+                    msg.member.user.id*/
+                }
                 if (msg.content.startsWith('!help')) {
                     this.discord.createMessage(msg.channel.id, "Type !register to register yourself with Paperbot, " +
                         "after which you can join in on game selection rounds");

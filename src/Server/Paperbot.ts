@@ -37,6 +37,11 @@ export class Paperbot {
                 }
             }
 
+            if (msg.content.startsWith('test')) {
+                /*this.discord.getUser
+                msg.member.user.id*/
+            }
+
             if (msg.content.startsWith('!help')) {
                 this.discord.createMessage(msg.channel.id,
                     "Type !register to register yourself with Paperbot, " +

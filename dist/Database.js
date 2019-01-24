@@ -42,7 +42,7 @@ class Database {
     }
     static saveEntityType(type, entries) {
         const repository = typeorm_1.getRepository(type);
-        return repository.save(entries, { chunk: (entries.length > 800 ? entries.length / 800 : 1) })
+        return repository.save(entries, { chunk: (entries.length > 500 ? entries.length / 500 : 1) })
             .catch(e => console.error("Something went wrong writing to the database", e));
     }
     getGamesWithoutContent() {

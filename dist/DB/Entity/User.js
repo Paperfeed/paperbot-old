@@ -29,7 +29,7 @@ __decorate([
     __metadata("design:type", Number)
 ], User.prototype, "createdOn", void 0);
 User = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity("users")
 ], User);
 exports.User = User;
 //# sourceMappingURL=User.js.map

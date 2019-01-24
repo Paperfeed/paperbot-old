@@ -14,19 +14,19 @@ const Game_1 = require("./Game");
 let Developer = class Developer {
 };
 __decorate([
-    typeorm_1.PrimaryGeneratedColumn(),
+    typeorm_1.PrimaryColumn(),
     __metadata("design:type", Number)
 ], Developer.prototype, "id", void 0);
 __decorate([
-    typeorm_1.Column(),
+    typeorm_1.Column({ unique: true }),
     __metadata("design:type", String)
 ], Developer.prototype, "name", void 0);
 __decorate([
     typeorm_1.ManyToMany(type => Game_1.Game, game => game.developers),
-    __metadata("design:type", Array)
+    __metadata("design:type", Promise)
 ], Developer.prototype, "games", void 0);
 Developer = __decorate([
-    typeorm_1.Entity()
+    typeorm_1.Entity("developers")
 ], Developer);
 exports.Developer = Developer;
 //# sourceMappingURL=Developer.js.map
