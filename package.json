@@ -16,7 +16,7 @@
   "dependencies": {
     "dotenv": "^6.2.0",
     "eris": "^0.9.0",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.1",
     "reflect-metadata": "^0.1.12",
     "sqlite3": "^4.0.4",
     "typeorm": "^0.2.11"
