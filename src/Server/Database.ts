@@ -39,14 +39,20 @@ export class Database {
             .catch(e => console.error("Something went wrong saving a new user", user, e));
     }
 
-    static saveEntityType(type, entries) {
+    static async saveEntityType(type, entries) {
         const repository = getRepository(type);
-        return repository.save(entries, {chunk: (entries.length > 500 ? entries.length / 500 : 1)})
-                         .catch(e => console.error("Something went wrong writing to the database", e));
+        return repository.save(entries, {chunk: (entries.length > 800 ? entries.length / 800 : 1)})
+                               .catch(e => console.error("Something went wrong writing to the database", e));
     }
 
     async getGamesWithoutContent() {
         const repository = getRepository(Game);
-        return await repository.find({hasContent: null})
+        return await repository.find({
+            select: ["id"],
+            where: [{
+                hasContent: null
+            }],
+            take: 1000
+        });
     }
 }

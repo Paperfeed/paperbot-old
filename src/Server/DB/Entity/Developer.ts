@@ -1,10 +1,10 @@
-import { Column, Entity, ManyToMany, PrimaryColumn } from "typeorm";
-import { Game }                                      from "./Game";
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Game }                                               from "./Game";
 
 
 @Entity("developers")
 export class Developer {
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
     id : number;
 
     @Column({unique: true})

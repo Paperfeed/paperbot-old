@@ -17,6 +17,7 @@ const Category_1 = require("../DB/Entity/Category");
 const Developer_1 = require("../DB/Entity/Developer");
 const Publisher_1 = require("../DB/Entity/Publisher");
 const Genre_1 = require("../DB/Entity/Genre");
+const typeorm_1 = require("typeorm");
 // Get apps details
 // https://store.steampowered.com/api/appdetails?appids=594330
 // https://wiki.teamfortress.com/wiki/User:RJackson/StorefrontAPI#Known_methods
@@ -49,7 +50,9 @@ class SteamAPI {
                 dbEntry.name = game.name;
                 gameArray.push(game);
             }
+            console.log("Saving to database: ", gameArray.length);
             yield Database_1.Database.saveEntityType(Game_1.Game, gameArray);
+            console.log("All games updated");
             this.updateStack = yield Database_1.Database.Instance.getGamesWithoutContent();
             if (this.updateStack.length) {
                 console.log(`Updating ${this.updateStack.length} games without content...`);
@@ -97,10 +100,12 @@ class SteamAPI {
                 }
                 try {
                     publishers = steamData.publishers.map(publisher => {
+                        typeorm_1.getRepository(Publisher_1.Publisher).find({ name: publisher });
                         const entity = new Publisher_1.Publisher();
                         entity.name = publisher;
                         return entity;
                     });
+                    yield Database_1.Database.saveEntityType(Publisher_1.Publisher, publishers);
                 }
                 catch (e) {
                 }
@@ -162,8 +167,8 @@ class SteamAPI {
                 game.drm = steamData.drm_notice;
                 game.developers = Promise.resolve(developers);
                 game.publishers = Promise.resolve(publishers);
-                game.categories = categories;
-                game.genres = genres;
+                game.categories = Promise.resolve(categories);
+                game.genres = Promise.resolve(genres);
                 game.screenshots = Promise.resolve(screenshots);
                 game.trailers = Promise.resolve(trailers);
                 game.score = steamData.metacritic !== undefined ? steamData.metacritic.score : null;
@@ -176,7 +181,7 @@ class SteamAPI {
                 game.hasContent = true;
                 game.lastUpdate = Date.now();
                 console.log(`Saving "${game.name}" into database`);
-                Database_1.Database.saveEntityType(Game_1.Game, game);
+                yield Database_1.Database.saveEntityType(Game_1.Game, game);
             }
             setTimeout(this.updateGameInfo, 1000);
         });

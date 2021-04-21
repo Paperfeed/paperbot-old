@@ -14,7 +14,7 @@ const Game_1 = require("./Game");
 let Developer = class Developer {
 };
 __decorate([
-    typeorm_1.PrimaryColumn(),
+    typeorm_1.PrimaryGeneratedColumn(),
     __metadata("design:type", Number)
 ], Developer.prototype, "id", void 0);
 __decorate([

@@ -1,12 +1,13 @@
 import { fetchAsync, UrlBuildParams } from '../utils';
-import { Database }                   from "../Database";
-import { Game }                       from "../DB/Entity/Game";
-import { Screenshot }                 from "../DB/Entity/Screenshot";
-import { Trailer }                    from "../DB/Entity/Trailer";
-import { Category }                   from "../DB/Entity/Category";
-import { Developer }                  from "../DB/Entity/Developer";
-import { Publisher }                  from "../DB/Entity/Publisher";
-import { Genre }                      from "../DB/Entity/Genre";
+import { Database }      from "../Database";
+import { Game }          from "../DB/Entity/Game";
+import { Screenshot }    from "../DB/Entity/Screenshot";
+import { Trailer }       from "../DB/Entity/Trailer";
+import { Category }      from "../DB/Entity/Category";
+import { Developer }     from "../DB/Entity/Developer";
+import { Publisher }     from "../DB/Entity/Publisher";
+import { Genre }         from "../DB/Entity/Genre";
+import { getRepository } from "typeorm";
 
 // Get apps details
 // https://store.steampowered.com/api/appdetails?appids=594330
@@ -48,7 +49,6 @@ export class SteamAPI {
     async initializeDatabase() {
         console.log("Retrieving list of all apps on Steam...");
         const gameData = await this.getAllGames();
-
         const gameArray = [];
 
         for (let game of gameData) {
@@ -59,8 +59,9 @@ export class SteamAPI {
 
             gameArray.push(game);
         }
-
+        console.log("Saving to database: ", gameArray.length);
         await Database.saveEntityType(Game, gameArray);
+        console.log("All games updated");
 
         this.updateStack = await Database.Instance.getGamesWithoutContent();
 
@@ -115,10 +116,13 @@ export class SteamAPI {
 
             try {
                 publishers = steamData.publishers.map(publisher => {
+                    getRepository(Publisher).find({name: publisher});
                     const entity = new Publisher();
                     entity.name = publisher;
                     return entity;
                 });
+
+                await Database.saveEntityType(Publisher, publishers);
             } catch (e) {
             }
 
@@ -184,8 +188,8 @@ export class SteamAPI {
             game.drm = steamData.drm_notice;
             game.developers = Promise.resolve(developers);
             game.publishers = Promise.resolve(publishers);
-            game.categories = categories;
-            game.genres = genres;
+            game.categories = Promise.resolve(categories);
+            game.genres = Promise.resolve(genres);
             game.screenshots = Promise.resolve(screenshots);
             game.trailers = Promise.resolve(trailers);
             game.score = steamData.metacritic !== undefined ? steamData.metacritic.score : null;
@@ -199,7 +203,7 @@ export class SteamAPI {
             game.lastUpdate = Date.now();
 
             console.log(`Saving "${game.name}" into database`);
-            Database.saveEntityType(Game, game);
+            await Database.saveEntityType(Game, game);
         }
 
         setTimeout(this.updateGameInfo, 1000);

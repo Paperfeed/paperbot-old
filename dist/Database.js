@@ -41,14 +41,22 @@ class Database {
             .catch(e => console.error("Something went wrong saving a new user", user, e));
     }
     static saveEntityType(type, entries) {
-        const repository = typeorm_1.getRepository(type);
-        return repository.save(entries, { chunk: (entries.length > 500 ? entries.length / 500 : 1) })
-            .catch(e => console.error("Something went wrong writing to the database", e));
+        return __awaiter(this, void 0, void 0, function* () {
+            const repository = typeorm_1.getRepository(type);
+            return repository.save(entries, { chunk: (entries.length > 800 ? entries.length / 800 : 1) })
+                .catch(e => console.error("Something went wrong writing to the database", e));
+        });
     }
     getGamesWithoutContent() {
         return __awaiter(this, void 0, void 0, function* () {
             const repository = typeorm_1.getRepository(Game_1.Game);
-            return yield repository.find({ hasContent: null });
+            return yield repository.find({
+                select: ["id"],
+                where: [{
+                        hasContent: null
+                    }],
+                take: 1000
+            });
         });
     }
 }

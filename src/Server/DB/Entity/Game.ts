@@ -74,11 +74,11 @@ export class Game {
 
     @ManyToMany(type => Genre, genre => genre.games, {eager: true})
     @JoinTable()
-    genres : Genre[];
+    genres : Promise<Genre[]>;
 
     @ManyToMany(type => Category, category => category.games, {eager: true})
     @JoinTable()
-    categories : Category[];
+    categories : Promise<Category[]>;
 
     @ManyToMany(type => Publisher, publisher => publisher.games)
     @JoinTable()

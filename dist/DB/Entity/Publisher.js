@@ -14,7 +14,7 @@ const Game_1 = require("./Game");
 let Publisher = class Publisher {
 };
 __decorate([
-    typeorm_1.PrimaryColumn(),
+    typeorm_1.PrimaryGeneratedColumn(),
     __metadata("design:type", Number)
 ], Publisher.prototype, "id", void 0);
 __decorate([

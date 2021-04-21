@@ -105,12 +105,12 @@ __decorate([
 __decorate([
     typeorm_1.ManyToMany(type => Genre_1.Genre, genre => genre.games, { eager: true }),
     typeorm_1.JoinTable(),
-    __metadata("design:type", Array)
+    __metadata("design:type", Promise)
 ], Game.prototype, "genres", void 0);
 __decorate([
     typeorm_1.ManyToMany(type => Category_1.Category, category => category.games, { eager: true }),
     typeorm_1.JoinTable(),
-    __metadata("design:type", Array)
+    __metadata("design:type", Promise)
 ], Game.prototype, "categories", void 0);
 __decorate([
     typeorm_1.ManyToMany(type => Publisher_1.Publisher, publisher => publisher.games),
