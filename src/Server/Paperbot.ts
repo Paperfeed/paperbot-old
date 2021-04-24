@@ -77,10 +77,13 @@ export class Paperbot {
     console.log(`Received message: ${msg.content}`)
 
     Object.keys(commands).some(key => {
-      const command = commands[key]
+      const command = commands[key as keyof typeof commands]
       if (command.matcher(msg)) {
         console.log(`which matched command [${key}]`)
-        command.fn.bind(this)(msg)
+        const parameters = command.parameterMatcher
+          ? command.parameterMatcher(msg.content)
+          : msg.content.match(/([^ ])+/gi)
+        command.fn.bind(this)(msg, parameters)
         return command.stopPropagation
       }
     })

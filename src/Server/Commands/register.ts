@@ -4,9 +4,8 @@ import { Emoji } from '../Data/Emoji'
 import { Command } from './index'
 
 export const register = {
-  fn: async function (msg) {
-    const parameters = msg.content.match(/([^ ])+/gi)
-    const id = msg.member.user.id
+  fn: async function (msg, parameters) {
+    const id = msg.author.id
 
     const userFromDB = await this.fauna.retrieveUser(id).catch(() => undefined)
 
