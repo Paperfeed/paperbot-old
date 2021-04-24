@@ -1,16 +1,31 @@
-import faunadb, { Client } from 'faunadb'
+import faunadb, {
+  Abort,
+  Client,
+  Collection,
+  Create,
+  Exists,
+  Get,
+  If,
+  Let,
+  Ref,
+  Update,
+  values,
+  Var,
+} from 'faunadb'
 
-import { UserSummary } from '../API/types'
 import { FaunaError } from './FaunaError'
+import Document = values.Document
 
 const { FAUNA_SERVER_KEY } = process.env
-const { Collection, Create, Get, Ref } = faunadb.query
 
-interface CreateUserData {
+export interface UserData {
+  avatar: string
+  country: string
+  creationDate: number
   id: string
   name: string
-  steamData: UserSummary
   steamId: string
+  userName: string
 }
 
 export class FaunaClient {
@@ -22,21 +37,32 @@ export class FaunaClient {
     })
   }
 
-  public async createUser({ id, name, steamData, steamId }: CreateUserData) {
+  public async createOrUpdateUser(
+    userData: UserData,
+  ): Promise<Document<UserData>> {
     try {
+      const ref = Ref(Collection('users'), userData.id)
+      const data = {
+        data: userData,
+      }
+
       return await this.client.query(
-        Create(Collection('users'), {
-          data: { id, name, steamData, steamId },
-        }),
+        If(Exists(ref), Update(ref, data), Create(ref, data)),
       )
     } catch (error) {
       throw new FaunaError(error)
     }
   }
 
-  public async retrieveUser(id: string) {
+  public async retrieveUser(id: string): Promise<Document<UserData>> {
     try {
-      return await this.client.query(Get(Ref(Collection('users'), id)))
+      const ref = Ref(Collection('users'), id)
+      return await this.client.query(
+        Let(
+          { userExists: Exists(ref) },
+          If(Var('userExists'), Get(ref), Abort('User does not exist')),
+        ),
+      )
     } catch (error) {
       throw new FaunaError(error)
     }

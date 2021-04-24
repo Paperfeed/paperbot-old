@@ -3,7 +3,7 @@ import { Client as DiscordClient, Message, MessageReaction } from 'discord.js'
 
 import { SteamAPI } from './API/SteamAPI'
 import * as commands from './Commands/index'
-import { FaunaClient } from './DB/FaunaClient'
+import { FaunaClient, UserData } from './DB/FaunaClient'
 import { IGDB } from './index'
 
 enum Step {
@@ -40,6 +40,16 @@ export class Paperbot {
 
     discord.on('message', this.messageHandler)
     discord.on('messageReactionAdd', this.messageReactionHandler)
+  }
+
+  public onUserCreated = async (userData: UserData) => {
+    const user = await this.discord.users.fetch(userData.id)
+    const dm = await user.dmChannel.fetch()
+
+    dm.messages.channel.lastMessage.edit(
+      `User was successfully created as ${userData.userName}`,
+      {},
+    )
   }
 
   private async messageReactionHandler(

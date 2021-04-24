@@ -10,7 +10,7 @@ export const register = {
     const userFromDB = await this.fauna.retrieveUser(id).catch(() => undefined)
 
     if (userFromDB) {
-      msg.reply(`You're already registered as ${userFromDB}`)
+      msg.reply(`You're already registered as ${userFromDB.data.userName}`)
       return
     }
 
