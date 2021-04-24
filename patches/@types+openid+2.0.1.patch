@@ -1,0 +1,14 @@
+diff --git a/node_modules/@types/openid/index.d.ts b/node_modules/@types/openid/index.d.ts
+index 03160fe..ddd371c 100644
+--- a/node_modules/@types/openid/index.d.ts
++++ b/node_modules/@types/openid/index.d.ts
+@@ -21,7 +21,8 @@ export class RelyingParty {
+            authenticate(
+                identifier: string,
+                immediate: boolean,
+-               callback: (err: OpenIdError | null, authUrl: string | null) => void
++               callback: (err: OpenIdError | null, authUrl: string | null) => void,
++               queryString?: string
+            ): void;
+ 
+            verifyAssertion(
