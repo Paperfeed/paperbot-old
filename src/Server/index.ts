@@ -1,108 +1,127 @@
 // Initialize environment variables from .env file
-require('dotenv').config();
-import "reflect-metadata";
+import { Paperbot } from './Paperbot'
 
-import express      from 'express';
-import bodyParser   from 'body-parser';
-import path         from 'path';
-import { execSync } from 'child_process';
+require('dotenv').config()
+import 'reflect-metadata'
 
-import { Client }   from 'eris';
-import { SteamAPI } from './API/SteamAPI';
-import { Paperbot } from './Paperbot';
-import { Database } from './Database';
+import { execSync } from 'child_process'
+import Discord from 'discord.js'
+import fastify from 'fastify'
+import IGDB from 'igdb-api-node'
+import fetch from 'node-fetch'
+import SteamAPI from 'type-steamapi'
 
-import { ApolloServer } from 'apollo-server-express';
-import schema           from './GraphQL/Schema'
-// import { typeDefs, resolvers } from './GraphQL/Schema';
+import { FaunaClient } from './DB/FaunaClient'
+import { fetchAsync } from './utils'
 
-const db = Database.Instance;
-const discord = new Client(process.env.DISCORD_BOT_TOKEN);
-const paperbot = new Paperbot(discord, db);
+export type IGDB = ReturnType<typeof IGDB>
 
+const {
+  DISCORD_BOT_TOKEN,
+  IGDB_CLIENT_ID,
+  IGDB_SECRET,
+  NODE_ENV,
+  STEAM_API_HOST,
+  STEAM_API_KEY,
+  WEBHOOK_SECRET,
+} = process.env
 
-/*
-*
-* Express server
-*
-*/
-const server = new ApolloServer({schema});
-const app = express();
-app.use(bodyParser.json());
-app.use(express.static('dist'));
-server.applyMiddleware({app});
+const steam = new SteamAPI({ apiKey: STEAM_API_KEY })
+const discord = new Discord.Client()
 
-/*
-app.get('/', (request, response) => {
-    console.log(__dirname, path.join(__dirname, '../dist/index.html'));
-    response.sendFile(path.join(__dirname, '../dist/index.html'))
-});
-*/
+const fetchIGDBToken = async (): Promise<{
+  access_token: string
+  expires_in: number
+  token_type: string
+}> => {
+  try {
+    const response = await fetch(
+      `https://id.twitch.tv/oauth2/token?client_id=${IGDB_CLIENT_ID}&client_secret=${IGDB_SECRET}&grant_type=client_credentials`,
+      {
+        method: 'POST',
+      },
+    )
 
-// DEBUG
-if (process.env.NODE_ENV === "development") {
-    app.get('/allGames', async (request, response) => {
-        response.send(await SteamAPI.Instance.getAllGames())
-    });
-
-    app.get('/getGame', async (request, response) => {
-        const appId = request.query.appId; // default appId: Half-Life 2
-        response.send(await SteamAPI.Instance.getGameInfo(appId ? appId : 220));
-    });
+    return await response.json()
+  } catch (e) {
+    console.error('Could not retrieve IGDB access token', e)
+  }
 }
-// END DEBUG
 
-// Redirect other requests to React Router
+interface QueryString {
+  appId: string
+  secret: string
+}
 
-app.get('*', (request, response) => {
-    response.sendFile(path.join(__dirname, '../../dist/index.html'))
-});
+interface Request {
+  Body: any
+  Headers: any
+  Params: any
+  Querystring: QueryString
+}
 
+fetchIGDBToken().then(token => {
+  const igdb = IGDB(IGDB_CLIENT_ID, token.access_token)
+  const fauna = new FaunaClient()
 
-app.post('/deploy', (request, response) => {
-    if (request.query.secret !== process.env.WEBHOOK_SECRET) {
-        response.status(401).send();
-        return;
+  /*
+   *
+   * Server
+   *
+   */
+  const app = fastify()
+
+  // Endpoints
+  if (NODE_ENV === 'development') {
+    app.get('/allGames', async (request, response) => {
+      const data = await fetchAsync<{ applist: { apps: unknown[] } }>(
+        `${STEAM_API_HOST}/ISteamApps/GetAppList/v2/`,
+      )
+      response.send(data ? data.applist.apps : 'No data retrieved')
+    })
+
+    app.get<Request>('/getGame', async (request, response) => {
+      const appId = request.query.appId // default appId: Half-Life 2
+      response.send(await steam.getAppDetails((appId as string) || '220'))
+    })
+  }
+
+  app.post<Request>('/deploy', (request, response) => {
+    if (request.query.secret !== WEBHOOK_SECRET) {
+      response.status(401).send()
+      return
     }
 
     if (request.body.ref !== 'refs/heads/glitch') {
-        response.status(200).send('Push was not to glitch branch, so did not deploy.');
-        return;
+      response
+        .status(200)
+        .send('Push was not to glitch branch, so did not deploy.')
+      return
     }
 
-    const repoUrl = request.body.repository.git_url;
+    const repoUrl = request.body.repository.git_url
 
-    console.log('Fetching latest changes.');
-    const output = execSync(
-        `git checkout -- ./ && git pull -X theirs ${repoUrl} glitch && refresh`
-    ).toString();
+    console.log('Fetching latest changes.')
+    execSync(
+      `git checkout -- ./ && git pull -X theirs ${repoUrl} glitch && refresh`,
+    ).toString()
 
     response.status(200).send()
-});
+  })
 
+  app.listen(3000, () => {
+    console.log(`Listening on port 3000`)
+  })
 
-const listener = app.listen(process.env.PORT ? process.env.PORT : 3030, () => {
-    console.log(`Your app is listening on port ${(<any>listener.address()).port} ${server.graphqlPath}`);
-});
+  /*
+   *
+   * Discord bot
+   *
+   */
+  discord.on('ready', () => {
+    new Paperbot({ discord, fauna, igdb, steam })
+    console.log('Bot ready!')
+  })
 
-
-/*
-*
-* Discord bot
-*
- */
-
-discord.on('ready', () => {
-    console.log('Bot ready!');
-});
-
-discord.on('messageCreate', (msg) => paperbot.messageHandler(msg));
-
-discord.connect().catch(e => console.log("Error connecting bot to Discord: ", e));
-
-
-// Instantiate SteamAPI
-const steamAPI = SteamAPI.Instance;
-
-
-
+  discord.login(DISCORD_BOT_TOKEN)
+})

@@ -1,41 +1,74 @@
-import { Database } from "./Database";
-import { SteamAPI } from "./API/SteamAPI";
-import { Client }   from "eris";
+import { Client as DiscordClient, Message, MessageReaction } from 'discord.js'
+import SteamAPI from 'type-steamapi'
+
+import * as commands from './Commands/index'
+import { FaunaClient } from './DB/FaunaClient'
+import { IGDB } from './index'
 
 enum Step {
-    REGISTRATION_CONFIRM_NAME
+  REGISTRATION_CONFIRM_NAME,
+}
+
+interface StackItem {
+  step: Step
+  userId: string
+}
+
+interface Clients {
+  discord: DiscordClient
+  fauna: FaunaClient
+  igdb: IGDB
+  steam: SteamAPI
 }
 
 export class Paperbot {
-    private historyStack : Array<any>;
-    private database: Database;
-    private discord : Client;
+  historyStack: Array<StackItem>
+  discord: DiscordClient
+  steam: SteamAPI
+  igdb: IGDB
+  fauna: FaunaClient
 
-    constructor(discord: Client, database: Database) {
-        this.discord = discord;
-        this.database = database;
-        this.historyStack = [];
-    }
+  constructor({ discord, fauna, igdb, steam }: Clients) {
+    this.discord = discord
+    this.steam = steam
+    this.igdb = igdb
+    this.historyStack = []
+    this.fauna = fauna
+    this.messageHandler = this.messageHandler.bind(this)
+    this.messageReactionHandler = this.messageReactionHandler.bind(this)
+
+    discord.on('message', this.messageHandler)
+    discord.on('messageReactionAdd', this.messageReactionHandler)
+  }
 
     async messageHandler(msg) {
         if (!msg.member.bot) {
 
-            const unresolvedActions : Array<any> = this.historyStack.filter(a => a.userId === msg.member.id);
+  private async messageHandler(msg: Message): Promise<void> {
+    if (msg.author.bot) return
 
-            if (unresolvedActions.length) {
-                console.log("Found unresolved action for this message's userId", unresolvedActions);
-                for (let action of unresolvedActions) {
-                    switch (action.step) {
-                        case Step.REGISTRATION_CONFIRM_NAME:
-                            if (/\b(yes|y|ye|yeah|ok)\b/i.test(msg.content)) {
-                                // Code to add new user here
-                            }
-                            break;
-                    }
+    const unresolvedActions = this.historyStack.filter(
+      a => a.userId === msg.member.id,
+    )
 
-                    this.historyStack = this.historyStack.filter(a => a !== action);
-                }
+    if (unresolvedActions.length) {
+      console.log(
+        "Found unresolved action for this message's userId",
+        unresolvedActions,
+      )
+
+      for (const action of unresolvedActions) {
+        switch (action.step) {
+          case Step.REGISTRATION_CONFIRM_NAME:
+            if (/\b(yes|y|ye|yeah|ok)\b/i.test(msg.content)) {
+              // Code to add new user here
             }
+            break
+        }
+
+        this.historyStack = this.historyStack.filter(a => a !== action)
+      }
+    }
 
             if (msg.content.startsWith('test')) {
                 /*this.discord.getUser
@@ -85,20 +118,57 @@ export class Paperbot {
                     }
                 );
 
-                this.historyStack.push({
-                    userId: msg.member.user.id,
-                    step: Step.REGISTRATION_CONFIRM_NAME
-                });
+    // this.fauna.createUser({id, name: steamUsername, steamId: })
 
-                //msg.member.user.id;
-                //msg.member.user.username;
-                /*let newUser: User;
+    // const parameters = msg.content.match(/([^ ])+/gi)
+    // const username =
+    //   parameters.length > 1 ? parameters[1] : msg.member.user.username
+    // const steamid = await SteamAPI.Instance.getUserID(username)
+    // const summary = await SteamAPI.Instance.getUserSummary(steamid)
+    // console.log(parameters)
+    //
+    // this.discord.createMessage(msg.channel.id, {
+    //   embed: {
+    //     color: 0x008000,
+    //
+    //     fields: [
+    //       {
+    //         inline: true,
+    //         name: 'Username',
+    //         value:
+    //           summary.personaname +
+    //           (summary.realname ? `\n*aka* ${summary.realname}` : ''),
+    //       },
+    //       {
+    //         inline: true,
+    //         name: 'Country',
+    //         value: `${summary.loccountrycode}`,
+    //       },
+    //     ],
+    //
+    //     footer: {
+    //       text: 'Is this correct?',
+    //     },
+    //     // description: "Found the following user:",
+    //     thumbnail: {
+    //       url: summary.avatarmedium,
+    //     },
+    //     title: '**Found the following user:**',
+    //     url: summary.profileurl,
+    //   },
+    // })
+    //
+    // this.historyStack.push({
+    //   step: Step.REGISTRATION_CONFIRM_NAME,
+    //   userId: msg.member.user.id,
+    // })
+    //msg.member.user.id;
+    //msg.member.user.username;
+    /*let newUser: User;
                 newUser.id = msg.member.id;
                 newUser.steamId =
 
                 console.log("New user:", newUser);
                 this.database.createNewUser({id: 1, games: "test", steamId: "12345678"})*/
-            }
-        }
-    }
+  }
 }
