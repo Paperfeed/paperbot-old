@@ -41,8 +41,11 @@ export class Paperbot {
     discord.on('messageReactionAdd', this.messageReactionHandler)
   }
 
-    async messageHandler(msg) {
-        if (!msg.member.bot) {
+  private async messageReactionHandler(
+    msgReaction: MessageReaction,
+  ): Promise<void> {
+    msgReaction
+  }
 
   private async messageHandler(msg: Message): Promise<void> {
     if (msg.author.bot) return
@@ -70,53 +73,31 @@ export class Paperbot {
       }
     }
 
-            if (msg.content.startsWith('test')) {
-                /*this.discord.getUser
-                msg.member.user.id*/
-            }
+    console.log(`Received message: ${msg.content}`)
 
-            if (msg.content.startsWith('!help')) {
-                this.discord.createMessage(msg.channel.id,
-                    "Type !register to register yourself with Paperbot, " +
-                    "after which you can join in on game selection rounds"
-                );
-            }
+    Object.keys(commands).some(key => {
+      const command = commands[key]
+      if (command.matcher(msg)) {
+        console.log(`which matched command [${key}]`)
+        command.fn.bind(this)(msg)
+        return command.stopPropagation
+      }
+    })
 
-            if (msg.content.startsWith('!register')) {
-                const parameters = msg.content.match(/([^ ])+/gi);
-                const username = parameters.length > 1 ? parameters[1] : msg.member.user.username;
-                const steamid = await SteamAPI.Instance.getUserID(username);
-                const summary = await SteamAPI.Instance.getUserSummary(steamid);
-                console.log(parameters);
-
-                this.discord.createMessage(msg.channel.id,
-                    {
-                        embed: {
-                            title: "**Found the following user:**",
-                            // description: "Found the following user:",
-                            thumbnail: {
-                                url: summary.avatarmedium
-                            },
-                            color: 0x008000,
-                            url: summary.profileurl,
-                            fields: [
-                                {
-                                    name: "Username",
-                                    value: summary.personaname + (summary.realname ? `\n*aka* ${summary.realname}` : ""),
-                                    inline: true
-                                },
-                                {
-                                    name: "Country",
-                                    value: `${summary.loccountrycode}`,
-                                    inline: true
-                                },
-                            ],
-                            footer: {
-                                text: "Is this correct?"
-                            }
-                        }
-                    }
-                );
+    if (msg.content.startsWith('g ')) {
+      const name = msg.content.match(/g (.+)/)[1]
+      try {
+        const response = await this.igdb
+          .fields('*')
+          .search(name)
+          .request('/games')
+        response.data.forEach(game =>
+          msg.channel.send(JSON.stringify(game, null, 2)),
+        )
+      } catch (e) {
+        console.error(e)
+      }
+    }
 
     // this.fauna.createUser({id, name: steamUsername, steamId: })
 
