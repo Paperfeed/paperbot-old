@@ -1,5 +1,6 @@
+import { MessageEmbed, MessageReaction } from 'discord.js'
+
 import { Emoji } from '../Data/Emoji'
-import { ifArrayGetFirstItem } from '../utils'
 import { Command } from './index'
 
 export const register = {
@@ -14,11 +15,19 @@ export const register = {
       return
     }
 
+    const dm = await msg.author.createDM()
+    await dm.send(
+      new MessageEmbed()
+        .setTitle('To register visit this link to sign in with Steam OpenID')
+        .setURL(`http://localhost:3000/auth/steam?userId=${msg.author.id}`),
+    )
+    return
+
     const steamUsername =
       parameters.length > 1 ? parameters[1] : msg.member.user.username
-    const steamId = await this.steam.resolve(steamUsername)
+    const steamId = await this.steam.getSteamId(steamUsername)
     const summary = steamId
-      ? ifArrayGetFirstItem(await this.steam.getUserSummary(steamId))
+      ? await this.steam.getUserSummary(steamId)
       : undefined
 
     if (summary) {
@@ -31,41 +40,51 @@ export const register = {
               inline: true,
               name: 'Username',
               value:
-                summary.personaName +
-                (summary.realName ? `\n*aka* ${summary.realName}` : ''),
+                summary.personaname +
+                (summary.realname ? `\n*aka* ${summary.realname}` : ''),
             },
             {
               inline: true,
               name: 'Country',
-              value: summary.locCountyCode || '-',
+              value: summary.loccountrycode || '-',
             },
           ],
           footer: {
             text: 'Is this correct?',
           },
           thumbnail: {
-            url: summary.avatar.full,
+            url: summary.avatarfull,
           },
           title: '**Found the following user:**',
-          url: summary.profileUrl,
+          url: summary.profileurl,
         },
       })
 
       await reply.react(Emoji.WhiteCheckMark)
+      await reply.react(Emoji.NoEntrySign)
 
       reply
         .awaitReactions(
-          (reaction, user) =>
-            [Emoji.HeavyCheckMark].includes(reaction.emoji.name) &&
-            user.id === id,
+          (reaction: MessageReaction, user) =>
+            [Emoji.HeavyCheckMark, Emoji.NoEntrySign].includes(
+              reaction.emoji.name as Emoji,
+            ) && user.id === id,
           { errors: ['time'], max: 1, time: 60000 },
         )
         .then(collected => {
           const reaction = collected.first()
           console.log('reaction')
           console.log(collected, reaction)
-          if (reaction?.emoji.name === Emoji.HeavyCheckMark) {
-            reply.edit(`Registering as ${steamUsername}, please wait...`)
+          switch (reaction?.emoji.name) {
+            case Emoji.HeavyCheckMark:
+              reply.edit(`Registering as ${steamUsername}, please wait...`, {})
+              // this.fauna.createUser({id, name: steamUsername, steamId: })
+              return
+            case Emoji.NoEntrySign:
+              reply.edit(
+                `Please retry the search with another username, make sure you set your steam profile to public`,
+              )
+              return
           }
         })
         .catch(() => {

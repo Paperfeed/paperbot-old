@@ -1,6 +1,7 @@
+import { GameResult } from '@igdb/types'
 import { Client as DiscordClient, Message, MessageReaction } from 'discord.js'
-import SteamAPI from 'type-steamapi'
 
+import { SteamAPI } from './API/SteamAPI'
 import * as commands from './Commands/index'
 import { FaunaClient } from './DB/FaunaClient'
 import { IGDB } from './index'
@@ -91,65 +92,12 @@ export class Paperbot {
           .fields('*')
           .search(name)
           .request('/games')
-        response.data.forEach(game =>
+        response.data.forEach((game: GameResult) =>
           msg.channel.send(JSON.stringify(game, null, 2)),
         )
       } catch (e) {
         console.error(e)
       }
     }
-
-    // this.fauna.createUser({id, name: steamUsername, steamId: })
-
-    // const parameters = msg.content.match(/([^ ])+/gi)
-    // const username =
-    //   parameters.length > 1 ? parameters[1] : msg.member.user.username
-    // const steamid = await SteamAPI.Instance.getUserID(username)
-    // const summary = await SteamAPI.Instance.getUserSummary(steamid)
-    // console.log(parameters)
-    //
-    // this.discord.createMessage(msg.channel.id, {
-    //   embed: {
-    //     color: 0x008000,
-    //
-    //     fields: [
-    //       {
-    //         inline: true,
-    //         name: 'Username',
-    //         value:
-    //           summary.personaname +
-    //           (summary.realname ? `\n*aka* ${summary.realname}` : ''),
-    //       },
-    //       {
-    //         inline: true,
-    //         name: 'Country',
-    //         value: `${summary.loccountrycode}`,
-    //       },
-    //     ],
-    //
-    //     footer: {
-    //       text: 'Is this correct?',
-    //     },
-    //     // description: "Found the following user:",
-    //     thumbnail: {
-    //       url: summary.avatarmedium,
-    //     },
-    //     title: '**Found the following user:**',
-    //     url: summary.profileurl,
-    //   },
-    // })
-    //
-    // this.historyStack.push({
-    //   step: Step.REGISTRATION_CONFIRM_NAME,
-    //   userId: msg.member.user.id,
-    // })
-    //msg.member.user.id;
-    //msg.member.user.username;
-    /*let newUser: User;
-                newUser.id = msg.member.id;
-                newUser.steamId =
-
-                console.log("New user:", newUser);
-                this.database.createNewUser({id: 1, games: "test", steamId: "12345678"})*/
   }
 }

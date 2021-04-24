@@ -9,10 +9,9 @@ import Discord from 'discord.js'
 import fastify from 'fastify'
 import IGDB from 'igdb-api-node'
 import fetch from 'node-fetch'
-import SteamAPI from 'type-steamapi'
 
+import { SteamAPI } from './API/SteamAPI'
 import { FaunaClient } from './DB/FaunaClient'
-import { fetchAsync } from './utils'
 
 export type IGDB = ReturnType<typeof IGDB>
 
@@ -21,12 +20,9 @@ const {
   IGDB_CLIENT_ID,
   IGDB_SECRET,
   NODE_ENV,
-  STEAM_API_HOST,
-  STEAM_API_KEY,
   WEBHOOK_SECRET,
 } = process.env
 
-const steam = new SteamAPI({ apiKey: STEAM_API_KEY })
 const discord = new Discord.Client()
 
 const fetchIGDBToken = async (): Promise<{
@@ -51,42 +47,72 @@ const fetchIGDBToken = async (): Promise<{
 interface QueryString {
   appId: string
   secret: string
+  userId: string
 }
 
 interface Request {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Body: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Headers: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Params: any
   Querystring: QueryString
 }
 
-fetchIGDBToken().then(token => {
+fetchIGDBToken().then(async token => {
   const igdb = IGDB(IGDB_CLIENT_ID, token.access_token)
   const fauna = new FaunaClient()
+  const steam = new SteamAPI()
+  const paperBot = new Paperbot({ discord, fauna, igdb, steam })
 
-  /*
-   *
+  /**
    * Server
-   *
    */
-  const app = fastify()
+  const server = fastify()
 
-  // Endpoints
+  // Debug Endpoints
   if (NODE_ENV === 'development') {
-    app.get('/allGames', async (request, response) => {
-      const data = await fetchAsync<{ applist: { apps: unknown[] } }>(
-        `${STEAM_API_HOST}/ISteamApps/GetAppList/v2/`,
-      )
-      response.send(data ? data.applist.apps : 'No data retrieved')
+    server.get('/allGames', async (request, response) => {
+      response.send((await steam.getAllGames()) ?? 'No data retrieved')
     })
 
-    app.get<Request>('/getGame', async (request, response) => {
-      const appId = request.query.appId // default appId: Half-Life 2
-      response.send(await steam.getAppDetails((appId as string) || '220'))
+    server.get<Request>('/getGame', async (request, response) => {
+      const appId = request.query.appId
+      response.send(await steam.getGameInfo(appId || '220')) // default appId: Half-Life 2
     })
   }
+  // END
 
-  app.post<Request>('/deploy', (request, response) => {
+  server.get<Request>('/auth/steam', async (request, response) => {
+    const userId = request.query.userId
+
+    if (!userId) return response.status(400).send('No userid found')
+    const redirectUrl = await steam.Auth.getRedirectUrl(`userId=${userId}`)
+    console.log('RedirectURL:', redirectUrl)
+    return response.redirect(redirectUrl)
+  })
+
+  server.get<Request>('/auth/steam/authenticate', async (request, response) => {
+    try {
+      const userId = request.query.userId
+      const user = await steam.Auth.authenticate(request)
+
+      fauna.createUser({
+        id: userId,
+        name: user.realname,
+        steamData: user,
+        steamId: user.steamid,
+      })
+
+      response.status(200).redirect('/')
+    } catch (error) {
+      console.error(error)
+      response.status(500).send(error)
+    }
+  })
+
+  server.post<Request>('/deploy', (request, response) => {
     if (request.query.secret !== WEBHOOK_SECRET) {
       response.status(401).send()
       return
@@ -109,17 +135,14 @@ fetchIGDBToken().then(token => {
     response.status(200).send()
   })
 
-  app.listen(3000, () => {
+  server.listen(3000, () => {
     console.log(`Listening on port 3000`)
   })
 
-  /*
-   *
-   * Discord bot
-   *
+  /**
+   * Discord Bot
    */
   discord.on('ready', () => {
-    new Paperbot({ discord, fauna, igdb, steam })
     console.log('Bot ready!')
   })
 
