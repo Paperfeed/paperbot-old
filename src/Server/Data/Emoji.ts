@@ -1271,7 +1271,7 @@ export enum Emoji {
   Bricks = '\U0001f9f1',
   Chains = '\u26d3\ufe0f',
   Magnet = '\U0001f9f2',
-  Gun = '\U0001f52b',
+  Gun = '🔫',
   Bomb = '\U0001f4a3',
   Firecracker = '\U0001f9e8',
   Axe = '\U0001fa93',
