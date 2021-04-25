@@ -2,6 +2,7 @@ import { Message } from 'discord.js'
 
 import { Paperbot } from '../Paperbot'
 
+export { bussen } from './bussen'
 export { help } from './help'
 export { register } from './register'
 
