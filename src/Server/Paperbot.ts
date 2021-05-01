@@ -1,10 +1,19 @@
-import { GameResult } from '@igdb/types'
-import { Client as DiscordClient, Message, MessageReaction } from 'discord.js'
+import { Artwork, Game, Screenshot } from '@igdb/types'
+import {
+  Client as DiscordClient,
+  Message,
+  MessageEmbed,
+  VoiceConnection,
+} from 'discord.js'
 
 import { SteamAPI } from './API/SteamAPI'
 import * as commands from './Commands/index'
+import { BoraInsults } from './Data/BoraInsults'
+import { UserID } from './Data/User'
 import { FaunaClient, UserData } from './DB/FaunaClient'
+import { Bussen } from './Games/Bussen/Bussen'
 import { IGDB } from './index'
+import { getRandomElement, ifArrayGetFirstItem } from './utils'
 
 enum Step {
   REGISTRATION_CONFIRM_NAME,
@@ -28,6 +37,9 @@ export class Paperbot {
   steam: SteamAPI
   igdb: IGDB
   fauna: FaunaClient
+  games: Bussen[] = []
+  boraIsGay = false
+  timer: NodeJS.Timeout
 
   constructor({ discord, fauna, igdb, steam }: Clients) {
     this.discord = discord
@@ -35,11 +47,38 @@ export class Paperbot {
     this.igdb = igdb
     this.historyStack = []
     this.fauna = fauna
+
     this.messageHandler = this.messageHandler.bind(this)
-    this.messageReactionHandler = this.messageReactionHandler.bind(this)
+
+    this.timer = setInterval(this.onTick, 10000)
 
     discord.on('message', this.messageHandler)
-    discord.on('messageReactionAdd', this.messageReactionHandler)
+  }
+
+  public onTick = async () => {
+    const time = new Date()
+    if (
+      time.getDay() === 3 &&
+      time.getHours() === 0 &&
+      time.getMinutes() === 0
+    ) {
+      const connections: VoiceConnection[] = []
+      for (const [, guild] of this.discord.guilds.cache) {
+        const members = await guild.members.fetch()
+        for (const [, member] of members) {
+          const connection = await member.voice?.channel?.join()
+          if (connection) connections.push(connection)
+        }
+      }
+
+      connections.map(c => {
+        const dispatcher = c.play('./assets/audio/itiswednesday.mp3')
+        dispatcher.on('finish', () => {
+          dispatcher.destroy()
+          c.disconnect()
+        })
+      })
+    }
   }
 
   public onUserCreated = async (userData: UserData) => {
@@ -50,12 +89,6 @@ export class Paperbot {
       `User was successfully created as ${userData.userName}`,
       {},
     )
-  }
-
-  private async messageReactionHandler(
-    msgReaction: MessageReaction,
-  ): Promise<void> {
-    msgReaction
   }
 
   private async messageHandler(msg: Message): Promise<void> {
@@ -98,16 +131,52 @@ export class Paperbot {
       }
     })
 
-    if (msg.content.startsWith('g ')) {
+    if (msg.content.startsWith('!no_u')) {
+      const content = new MessageEmbed()
+        .setDescription('no u')
+        .attachFiles(['./assets/imgs/no_u.jpg'])
+      msg.channel.send(content)
+    }
+
+    if (msg.content.startsWith('!bora_is_gay')) {
+      if (msg.author.tag === UserID.Aldert) {
+        if (!this.boraIsGay) {
+          this.discord.on('message', (message: Message) => {
+            if (message.author.username === 'BoraEF') {
+              message.reply(getRandomElement(BoraInsults))
+              this.fauna.writeToStats(message.author.id, { boraIsGay: 1 })
+            }
+          })
+          msg.reply('`Bora is gay mode activated`')
+        } else {
+          // this.discord.off('message')
+          msg.reply('`Bora is gay mode deactivated`')
+        }
+        this.boraIsGay = !this.boraIsGay
+      }
+    }
+
+    if (msg.content.startsWith('!g ')) {
       const name = msg.content.match(/g (.+)/)[1]
       try {
         const response = await this.igdb
-          .fields('*')
+          .fields('*,artworks.*,screenshots.*')
           .search(name)
           .request('/games')
-        response.data.forEach((game: GameResult) =>
-          msg.channel.send(JSON.stringify(game, null, 2)),
-        )
+
+        response.data.forEach((game: Game) => {
+          const { artworks, name, screenshots, summary } = game
+          const artwork =
+            ifArrayGetFirstItem(artworks as Artwork[])?.url ||
+            ifArrayGetFirstItem(screenshots as Screenshot[])?.url
+
+          const message = new MessageEmbed()
+            .setTitle(name)
+            .setDescription(summary)
+            .setThumbnail(artwork ? `https:${artwork}` : undefined)
+
+          msg.channel.send(message)
+        })
       } catch (e) {
         console.error(e)
       }

@@ -1,0 +1,34 @@
+type Guild @collection(name: "guilds") {
+    id: ID
+    prefix: String
+    boundChannel: String
+}
+
+type User @collection(name: "users") {
+    avatar: String
+    country: String
+    creationDate: Date
+    id: ID!
+    steamId: String
+    userName: String
+    stats: Stats @relation(name: "user_stats")
+}
+
+type Query {
+    allUsers: [User!] @index(name: "all_users")
+}
+
+type Stats @collection(name: "stats"){
+    drinks: Int
+    chugs: Int
+    user: User @relation(name: "user_stats")
+}
+
+type Game @collection(name: "games"){
+    name: String
+    genre: [Genre]
+}
+
+type Genre @embedded {
+    name: String
+}

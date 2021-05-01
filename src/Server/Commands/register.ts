@@ -1,10 +1,9 @@
-import { MessageEmbed, MessageReaction } from 'discord.js'
+import { MessageEmbed } from 'discord.js'
 
-import { Emoji } from '../Data/Emoji'
 import { Command } from './index'
 
 export const register = {
-  fn: async function (msg, parameters) {
+  fn: async function (msg) {
     const id = msg.author.id
 
     const userFromDB = await this.fauna.retrieveUser(id).catch(() => undefined)
@@ -22,7 +21,7 @@ export const register = {
     )
     return
 
-    const steamUsername =
+    /*const steamUsername =
       parameters.length > 1 ? parameters[1] : msg.member.user.username
     const steamId = await this.steam.getSteamId(steamUsername)
     const summary = steamId
@@ -72,8 +71,7 @@ export const register = {
         )
         .then(collected => {
           const reaction = collected.first()
-          console.log('reaction')
-          console.log(collected, reaction)
+
           switch (reaction?.emoji.name) {
             case Emoji.HeavyCheckMark:
               reply.edit(`Registering as ${steamUsername}, please wait...`, {})
@@ -92,7 +90,7 @@ export const register = {
         })
     } else {
       msg.reply('No user found, make sure your profile is set to public')
-    }
+    }*/
   },
   matcher: msg => msg.content.startsWith('!register'),
 } as Command

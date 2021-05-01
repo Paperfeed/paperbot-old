@@ -3,7 +3,7 @@ import { Command } from './index'
 
 export const bussen = {
   fn: async function (msg) {
-    new Bussen(this, msg)
+    this.games.push(new Bussen(this, msg))
   },
   matcher: msg => msg.content.startsWith('!bussen'),
   stopPropagation: true,

@@ -1,10 +1,11 @@
-import { Enum } from '../../utils'
+import { Enum, shuffleArray } from '../../utils'
 import { Card } from './Card'
 import { CardSuit, CardType, CardValues, DefaultCardValues } from './DeckEnum'
 
 interface DeckOptions {
   deckType?: DeckType
   overrides?: CardValues
+  unlimited?: boolean
 }
 
 enum DeckType {
@@ -47,9 +48,56 @@ const getExtraCardsByDeck = (
 }
 
 export class Deck {
+  public remainingCards: number
   private cards: Card[] = []
+  private unlimited: boolean
+  private deckType: DeckType
+  private overrides: CardValues
 
-  constructor({ deckType = DeckType.FiftyTwo, overrides }: DeckOptions) {
+  constructor(deckOptions: DeckOptions = {}) {
+    const { deckType = DeckType.FiftyTwo, overrides, unlimited } = deckOptions
+    this.unlimited = unlimited
+    this.deckType = deckType
+    this.overrides = overrides
+    this.generateCards()
+  }
+
+  public shuffle = () => shuffleArray(this.cards)
+
+  public draw = (hidden?: boolean) => {
+    if (this.cards.length <= 0) {
+      if (this.unlimited) {
+        this.generateCards()
+        this.shuffle()
+      } else {
+        throw new Error('Deck is empty')
+      }
+    }
+
+    const card = this.cards[0]
+    if (hidden) card.flip(false)
+
+    this.cards = this.cards.slice(1, this.cards.length)
+    if (!this.unlimited) this.remainingCards--
+
+    return card
+  }
+
+  public drawMultiple = (amount: number, hidden?: boolean) => {
+    const cards = []
+    try {
+      for (let i = 0; i < amount; i++) {
+        cards.push(this.draw(hidden))
+      }
+      return cards
+    } catch (e) {
+      console.error('Could not draw all cards because deck is empty')
+      return cards
+    }
+  }
+
+  private generateCards = () => {
+    const { deckType, overrides } = this
     const cardValues = getValuesByDeckType(deckType, overrides)
     const extraCards = getExtraCardsByDeck(deckType, cardValues)
 
@@ -62,7 +110,8 @@ export class Deck {
 
         this.cards.push(
           new Card({
-            name: `${name} of ${suitKey}`,
+            fullName: `${name} of ${suitKey}`,
+            name,
             suit: CardSuit[suitKey],
             type: type,
             value: cardValues[type],
@@ -72,25 +121,6 @@ export class Deck {
     })
 
     this.cards.push(...extraCards)
-  }
-
-  public shuffle() {
-    // Using the modern version of the Fisher–Yates shuffle
-    // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
-    const array = this.cards
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[array[i], array[j]] = [array[j], array[i]]
-    }
-  }
-
-  public draw() {
-    if (this.cards.length <= 0) {
-      return undefined
-    }
-
-    const card = this.cards.slice(0, 1)[0]
-    this.cards = this.cards.slice(1, this.cards.length)
-    return card
+    this.remainingCards = this.cards.length
   }
 }

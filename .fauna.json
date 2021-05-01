@@ -1,0 +1,4 @@
+{
+  "schemaPath": "src/Server/DB/schema.gql",
+  "secretEnv": "FAUNA_SERVER_KEY"
+}

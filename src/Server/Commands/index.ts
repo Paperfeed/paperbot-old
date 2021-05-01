@@ -4,6 +4,7 @@ import { Paperbot } from '../Paperbot'
 
 export { bussen } from './bussen'
 export { help } from './help'
+export { invite } from './invite'
 export { register } from './register'
 
 export interface Command {

@@ -5,10 +5,12 @@ require('dotenv').config()
 import 'reflect-metadata'
 
 import { execSync } from 'child_process'
-import Discord from 'discord.js'
+import Discord, { Intents } from 'discord.js'
 import fastify from 'fastify'
+import fastifyStatic from 'fastify-static'
 import IGDB from 'igdb-api-node'
 import fetch from 'node-fetch'
+import path from 'path'
 
 import { SteamAPI } from './API/SteamAPI'
 import { FaunaClient } from './DB/FaunaClient'
@@ -23,7 +25,16 @@ const {
   WEBHOOK_SECRET,
 } = process.env
 
-const discord = new Discord.Client()
+global.appRoot = path.join(path.resolve(__dirname), '../../')
+
+const intents = new Intents(Intents.ALL).remove(
+  'GUILD_BANS',
+  'GUILD_INVITES',
+  'GUILD_WEBHOOKS',
+)
+// console.log(intents.toArray())
+
+const discord = new Discord.Client({ ws: { intents } })
 
 const fetchIGDBToken = async (): Promise<{
   access_token: string
@@ -70,6 +81,10 @@ fetchIGDBToken().then(async token => {
    * Server
    */
   const server = fastify()
+  server.register(fastifyStatic, {
+    prefix: '/assets/',
+    root: path.join(global.appRoot, '/assets'),
+  })
 
   // Debug Endpoints
   if (NODE_ENV === 'development') {
@@ -89,7 +104,6 @@ fetchIGDBToken().then(async token => {
 
     if (!userId) return response.status(400).send('No userid found')
     const redirectUrl = await steam.Auth.getRedirectUrl(`userId=${userId}`)
-    console.log('RedirectURL:', redirectUrl)
     return response.redirect(redirectUrl)
   })
 
