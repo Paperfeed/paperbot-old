@@ -95,10 +95,10 @@ export const reactionFilter = (
   }
 
   let userCondition
-  if (!isDev && Array.isArray(userId)) {
+  if (Array.isArray(userId)) {
     userCondition = userId.includes(reactionUser.id)
   } else {
-    userCondition = userId ? userId === reactionUser.id || isDev() : true
+    userCondition = userId ? userId === reactionUser.id : true
   }
 
   return (
@@ -132,9 +132,10 @@ export const messageFilter = (params: MessageFilterParams = {}) => (
 
   let userCondition
   if (Array.isArray(byUser)) {
-    userCondition = byUser.includes(msg.author.id)
+    userCondition = isDeveloper(msg.author.id) || byUser.includes(msg.author.id)
   } else {
-    userCondition = byUser && !isDev() ? msg.author.id === byUser : true
+    userCondition =
+      isDeveloper(msg.author.id) || (byUser && msg.author.id === byUser)
   }
 
   return (

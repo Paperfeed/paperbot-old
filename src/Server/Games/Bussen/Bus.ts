@@ -142,6 +142,7 @@ export const busRound: RoundFn = async bussen => {
     const shots = bussen.busStep + 1
     bussen.drink(shots, passenger)
     bussen.busShots += shots
+    bussen.busMistakes++
 
     content
       .setColor('RED')
@@ -173,7 +174,7 @@ export const busRound: RoundFn = async bussen => {
   busCard.flip(true)
 
   if (bussen.busStep >= row.length) {
-    const shots = bussen.busMistakes
+    const shots = bussen.busShots
     const content = new MessageEmbed()
       .setTitle(`${passenger.name} got off the bus!`)
       .setDescription(

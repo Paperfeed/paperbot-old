@@ -1,6 +1,9 @@
+import { MessageAttachment } from 'discord.js'
+
 import { Emoji } from '../../Data/Emoji'
 import { MessageEmbed } from '../../Extensions/MessageEmbed'
 import { Card } from '../Base/Card'
+import { createCardCanvas } from '../Base/CardCanvas'
 import { Player } from '../Base/CardGame'
 import { Bussen } from './Bussen'
 import { Button } from './Button'
@@ -16,7 +19,7 @@ interface RenderMove {
   roundNr: number
 }
 
-export const renderMove = ({
+export const renderMove = async ({
   bussen,
   choice,
   content,
@@ -74,7 +77,6 @@ export const renderMove = ({
     }`
     bussen.drink(drinkAmount)
   }
-  console.log(`http://localhost:3000${lastDrawnCard.assetPath}`)
 
   content
     .setTitle(
@@ -83,7 +85,20 @@ export const renderMove = ({
       }`,
     )
     .setFooter('')
-    .setImage(`http://aldertvaandering.com${lastDrawnCard.assetPath}`)
+
+  const drawnCardBuffer = await createCardCanvas(lastDrawnCard)
+  content
+    .attachFiles([new MessageAttachment(drawnCardBuffer, 'lastDrawnCard.png')])
+    .setImage(`attachment://lastDrawnCard.png`)
+
+  if (secondToLastCard) {
+    const secondToLastCardBuffer = await createCardCanvas(secondToLastCard)
+    content
+      .attachFiles([
+        new MessageAttachment(secondToLastCardBuffer, 'secondToLastCard.png'),
+      ])
+      .setThumbnail(`attachment://secondToLastCard.png`)
+  }
 
   content.fields = [
     secondToLastCard

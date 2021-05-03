@@ -22,7 +22,7 @@ export const createRoundCard = ({
   new MessageEmbed()
     .setTitle(`[Round ${roundNr}]`)
     .setColor('AQUA')
-    .setImage(avatar)
+    .setThumbnail(avatar)
     .setDescription(description)
 
 interface CreateRound {
@@ -65,7 +65,7 @@ export const createRound = async ({
   const card = bussen.playerDrawCard()
   const correctGuess = correctGuessCondition(choice, card)
 
-  renderMove({
+  await renderMove({
     bussen,
     cards: [card],
     choice,
@@ -76,5 +76,6 @@ export const createRound = async ({
     roundNr,
   })
 
-  await message.edit(content)
+  await message.delete()
+  await message.channel.send(content)
 }
