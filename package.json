@@ -19,7 +19,7 @@
     "node-fetch": "^2.3.0",
     "reflect-metadata": "^0.1.12",
     "sqlite3": "^4.0.4",
-    "typeorm": "^0.2.11"
+    "typeorm": "^0.2.25"
   },
   "devDependencies": {
     "@types/node": "^10.12.18",
