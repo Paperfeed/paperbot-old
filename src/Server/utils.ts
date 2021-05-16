@@ -95,7 +95,9 @@ export const reactionFilter = (
   }
 
   let userCondition
-  if (Array.isArray(userId)) {
+  if (isDeveloper(reactionUser.id)) {
+    userCondition = true
+  } else if (Array.isArray(userId)) {
     userCondition = userId.includes(reactionUser.id)
   } else {
     userCondition = userId ? userId === reactionUser.id : true
