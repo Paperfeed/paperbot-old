@@ -15,7 +15,11 @@ export class DrinkCardGame extends CardGame {
   > = {}
   private dispenseCardRecord: Record<string, Message> = {}
 
-  public drink = (amount = 1, player: Player = this.currentPlayer) => {
+  public drink = (
+    amount = 1,
+    player: Player = this.currentPlayer,
+    guildId?: string,
+  ) => {
     const currentStats = this.drinkTally[player.id] || { chugs: 0, drinks: 0 }
     this.drinkTally = {
       ...this.drinkTally,
@@ -24,12 +28,16 @@ export class DrinkCardGame extends CardGame {
         drinks: currentStats.drinks + amount,
       },
     }
-    this.paperBot.fauna.writeToStats(player.id, {
+    this.paperBot.fauna.writeToStats(player.id, guildId, {
       drinks: amount,
     })
   }
 
-  public chug = (amount = 1, player: Player = this.currentPlayer) => {
+  public chug = (
+    amount = 1,
+    player: Player = this.currentPlayer,
+    guildId?: string,
+  ) => {
     const currentStats = this.drinkTally[player.id] || { chugs: 0, drinks: 0 }
     this.drinkTally = {
       ...this.drinkTally,
@@ -38,7 +46,7 @@ export class DrinkCardGame extends CardGame {
         chugs: currentStats.chugs + amount,
       },
     }
-    this.paperBot.fauna.writeToStats(player.id, {
+    this.paperBot.fauna.writeToStats(player.id, guildId, {
       chugs: amount,
     })
   }
@@ -64,6 +72,7 @@ export class DrinkCardGame extends CardGame {
     receivingPlayer: Player,
     fromPlayer?: Player,
     isChug?: boolean,
+    guildId?: string,
   ) => {
     const content = new MessageEmbed()
       .setColor('YELLOW')
@@ -74,9 +83,9 @@ export class DrinkCardGame extends CardGame {
       )
     this.channel.send(content)
     if (isChug) {
-      this.chug(amount, receivingPlayer)
+      this.chug(amount, receivingPlayer, guildId)
     } else {
-      this.drink(amount, receivingPlayer)
+      this.drink(amount, receivingPlayer, guildId)
     }
   }
 
@@ -159,6 +168,7 @@ export class DrinkCardGame extends CardGame {
               receivingPlayer,
               player,
               isChug,
+              msg.guild?.id,
             )
             this.removeDispensableDrinks(calculatedAmount, player)
           }

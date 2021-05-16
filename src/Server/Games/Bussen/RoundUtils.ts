@@ -72,6 +72,7 @@ export const createRound = async ({
     content,
     correctGuess,
     drinkAmount,
+    guildId: message.guild?.id,
     player: bussen.currentPlayer,
     roundNr,
   })

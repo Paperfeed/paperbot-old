@@ -140,7 +140,7 @@ export const busRound: RoundFn = async bussen => {
     await message.edit(content)
   } else {
     const shots = bussen.busStep + 1
-    bussen.drink(shots, passenger)
+    bussen.drink(shots, passenger, message.guild?.id)
     bussen.busShots += shots
     bussen.busMistakes++
 

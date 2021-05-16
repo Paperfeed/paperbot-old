@@ -15,6 +15,7 @@ interface RenderMove {
   content: MessageEmbed
   correctGuess: boolean
   drinkAmount?: number
+  guildId?: string
   player: Player
   roundNr: number
 }
@@ -25,6 +26,7 @@ export const renderMove = async ({
   content,
   correctGuess,
   drinkAmount = 1,
+  guildId,
   player,
   roundNr,
 }: RenderMove) => {
@@ -75,7 +77,7 @@ export const renderMove = async ({
     overviewString += ` and has to drink ${drinkAmount} shot${
       drinkAmount > 1 ? 's' : ''
     }`
-    bussen.drink(drinkAmount)
+    bussen.drink(drinkAmount, undefined, guildId)
   }
 
   content
