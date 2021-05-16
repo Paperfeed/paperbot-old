@@ -1,27 +1,61 @@
 type Guild @collection(name: "guilds") {
-    id: ID
+    id: ID!
     prefix: String
     boundChannel: String
+    users: [User] @relation(name: "user_guilds")
+    stats: [Stats] @relation(name: "guild_stats")
 }
 
 type User @collection(name: "users") {
     avatar: String
     country: String
-    creationDate: Date
+    creationDate: Int
     id: ID!
     steamId: String
+    name: String
     userName: String
     stats: Stats @relation(name: "user_stats")
+    guilds: [Guild] @relation(name: "user_guilds")
+}
+
+input ConnectionsInput {
+    connectFromId: ID
+    connectToId: ID!
+    connectToCollection: String!
+    fromIdName: String!
+    toIdName: String!
+    toCollection: String!
+    fromCollection: String
+    indexName: String!
 }
 
 type Query {
     allUsers: [User!] @index(name: "all_users")
+    allStats: [Stats!] @index(name: "all_stats")
+    allGuilds: [Guild!] @index(name: "all_guilds")
+
+}
+
+input UpsertGuildInput {
+    prefix: String
+    boundChannel: String
+}
+
+input IncrementStatsInput {
+    chugs: Int
+    drinks: Int
+}
+
+type Mutation {
+    upsertGuild(collection: String, id: ID!, data: UpsertGuildInput, connections: [ConnectionsInput] ): Guild! @resolver(name: "upsert")
+    incrementStats(collection: String, id: ID!, data: IncrementStatsInput, connections: [ConnectionsInput]): Stats! @resolver(name: "increment")
 }
 
 type Stats @collection(name: "stats"){
     drinks: Int
     chugs: Int
     user: User @relation(name: "user_stats")
+    guilds: [Guild] @relation(name: "guild_stats")
 }
 
 type Game @collection(name: "games"){

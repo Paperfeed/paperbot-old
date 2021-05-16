@@ -1,24 +1,14 @@
-import faunadb, {
-  Abort,
-  Add,
-  Client,
-  Collection,
-  ContainsPath,
-  Create,
-  Exists,
-  Expr,
-  Get,
-  If,
-  Let,
-  Ref,
-  Select,
-  Update,
-  values,
-  Var,
-} from 'faunadb'
+import faunadb, { Client } from 'faunadb'
+import { GraphQLClient } from 'graphql-request'
 
-import { FaunaError } from './FaunaError'
-import Document = values.Document
+import {
+  ConnectionsInput,
+  getSdk,
+  Sdk,
+  StatsInput,
+  UpsertGuildInput,
+  UserInput,
+} from '../../generated/graphql'
 
 const { FAUNA_SERVER_KEY } = process.env
 
@@ -34,100 +24,147 @@ export interface UserData {
 
 export class FaunaClient {
   private client: Client
+  private graphql: Sdk
 
   constructor() {
+    const client = new GraphQLClient('https://graphql.fauna.com/graphql', {
+      headers: {
+        authorization: `Bearer ${process.env.FAUNA_ADMIN_KEY}`,
+      },
+    })
+    this.graphql = getSdk(client)
+
     this.client = new faunadb.Client({
       secret: FAUNA_SERVER_KEY,
     })
   }
 
-  public async getChannelSettings(channelId: string) {
-    try {
-      const ref = Ref(Collection('channels'), channelId)
-
-      return await this.client.query(
-        Let(
-          { channelExists: Exists(ref) },
-          If(Var('channelExists'), Get(ref), Abort('User does not exist')),
-        ),
-      )
-    } catch (error) {
-      throw new FaunaError(error)
-    }
+  public async getGuildSettings(guildId: string) {
+    const guild = await this.graphql.getGuildSettings({ guildId })
+    return guild.findGuildByID
   }
 
-  public async writeChannelSettings(
-    channelId: string,
-    settings: { guild?: string; prefix?: string },
+  public async writeGuildSettings(
+    guildId: string,
+    settings: Omit<UpsertGuildInput, 'id'>,
+    userId?: string,
   ) {
-    try {
-      const ref = Ref(Collection('channels'), channelId)
-    } catch (error) {
-      throw new FaunaError(error)
+    const connections: ConnectionsInput[] = []
+    if (userId) {
+      connections.push({
+        connectToCollection: 'user_guilds',
+        connectToId: userId,
+        fromIdName: 'guildID',
+        indexName: 'guild_user_by_user',
+        toCollection: 'users',
+        toIdName: 'userID',
+      })
+      connections.push({
+        connectToCollection: 'guild_stats',
+        connectToId: userId,
+        fromIdName: 'guildID',
+        indexName: 'guild_stats_by_stats',
+        toCollection: 'stats',
+        toIdName: 'statsID',
+      })
     }
+
+    const guild = await this.graphql.upsertGuild({
+      connections,
+      data: settings,
+      guildId,
+    })
+    console.log(guild.upsertGuild)
+
+    return guild.upsertGuild
   }
 
-  public async createOrUpdateUser(
-    userData: UserData,
-  ): Promise<Document<UserData>> {
-    try {
-      const ref = Ref(Collection('users'), userData.id)
-      const data = {
-        data: userData,
-      }
-
-      return await this.client.query(
-        If(Exists(ref), Update(ref, data), Create(ref, data)),
-      )
-    } catch (error) {
-      throw new FaunaError(error)
-    }
+  public async createOrUpdateUser(data: UserInput) {
+    const user = await this.graphql.updateUser({ data, userId: data.id })
+    return user.updateUser
   }
 
-  public async retrieveUser(id: string): Promise<Document<UserData>> {
-    try {
-      const ref = Ref(Collection('users'), id)
-      return await this.client.query(
-        Let(
-          { userExists: Exists(ref) },
-          If(Var('userExists'), Get(ref), Abort('User does not exist')),
-        ),
-      )
-    } catch (error) {
-      throw new FaunaError(error)
-    }
+  public async findUser(userId: string) {
+    const user = await this.graphql.findUser({ userId })
+    return user.findUserByID
+  }
+
+  public async findGuildUsers(guildId: string) {
+    const guildUsers = await this.graphql.findGuildUsers({ guildId })
+    return guildUsers.findGuildByID.users.data
+  }
+
+  public async getGuildStats(guildId: string) {
+    const guildStats = await this.graphql.getStatsByGuild({ guildId })
+    return guildStats.findGuildByID.stats.data
+  }
+
+  public async getGuild(guildId: string) {
+    const guildStats = await this.graphql.getGuild({ guildId })
+    return guildStats.findGuildByID
   }
 
   public async writeToStats(
     userId: string,
-    stats: Record<string, string | number>,
+    guildId: string | undefined,
+    stats: StatsInput,
   ) {
-    const ref = Ref(Collection('stats'), userId)
+    const connections: ConnectionsInput[] = []
+    if (guildId) {
+      connections.push({
+        connectFromId: guildId,
+        connectToCollection: 'user_guilds',
+        connectToId: userId,
+        fromCollection: 'guilds',
+        fromIdName: 'guildID',
+        indexName: 'user_guilds_by_user',
+        toCollection: 'users',
+        toIdName: 'userID',
+      })
+      connections.push({
+        connectFromId: guildId,
+        connectToCollection: 'guild_stats',
+        connectToId: userId,
+        fromCollection: 'guilds',
+        fromIdName: 'guildID',
+        indexName: 'guild_stats_by_stats',
+        toCollection: 'stats',
+        toIdName: 'statsID',
+      })
+    }
 
-    const dbStats = Object.keys(stats).reduce((obj, key) => {
-      if (typeof stats[key] === 'number') {
-        obj[key] = If(
-          ContainsPath(['data', key], Get(ref)),
-          Add(Select(['data', key], Get(ref)), stats[key]),
-          stats[key],
-        )
-      } else {
-        obj[key] = stats[key]
+    const updatedStats = await this.graphql.writeStatsToUser({
+      connections,
+      data: stats,
+      userId,
+    })
+
+    return updatedStats.incrementStats
+
+    /*const currentStats = (await this.graphql.getStatsByUser({ userId }))
+      .findStatsByID
+
+    ;(Object.keys(currentStats) as (keyof Omit<
+      StatsInput,
+      'user' | 'guilds'
+    >)[]).reduce((obj, key) => {
+      if (typeof currentStats[key] === 'number') {
+        obj[key] = currentStats[key] + (stats[key] || 0)
       }
-
       return obj
-    }, {} as Record<string, Expr | string | number>)
+    }, stats)
 
-    return await this.client
-      .query(
-        If(
-          Exists(ref),
-          Update(ref, {
-            data: dbStats,
-          }),
-          Create(ref, { data: stats }),
-        ),
-      )
-      .catch(e => console.error('Something went wrong writing stats', stats, e))
+    return await this.graphql.writeStatsToUser({
+      data: {
+        ...stats,
+        guilds: {
+          connect: [guildId],
+        },
+        user: {
+          connect: userId,
+        },
+      },
+      userId,
+    })*/
   }
 }

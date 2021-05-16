@@ -1,4 +1,16 @@
 {
   "schemaPath": "src/Server/DB/schema.gql",
-  "secretEnv": "FAUNA_SERVER_KEY"
+  "secretEnv": "FAUNA_SERVER_KEY",
+  "codegen": {
+    "plugins": ["typescript-graphql-request"],
+    "documents": [
+      "src/Server/DB/operations/**"
+    ],
+    "outputFile": "src/generated/graphql.ts"
+  },
+  "fnsDir": "src/Server/DB/functions",
+  "indexesDir": "src/Server/DB/indexes",
+  "rolesDir": "src/Server/DB/roles",
+  "dataDir": "src/Server/DB/data",
+  "providersDir" : "src/Server/DB/providers"
 }

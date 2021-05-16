@@ -1,0 +1,360 @@
+# This file was generated based on ".graphqlconfig". Do not edit manually.
+
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type Game {
+    "The document's ID."
+    _id: ID!
+    "The document's timestamp."
+    _ts: Long!
+    genre: [Genre]
+    name: String
+}
+
+type Genre {
+    name: String
+}
+
+type Guild {
+    "The document's ID."
+    _id: ID!
+    "The document's timestamp."
+    _ts: Long!
+    boundChannel: String
+    id: ID!
+    prefix: String
+    stats(
+        "The pagination cursor."
+        _cursor: String,
+        "The number of items to return per page."
+        _size: Int
+    ): StatsPage!
+    users(
+        "The pagination cursor."
+        _cursor: String,
+        "The number of items to return per page."
+        _size: Int
+    ): UserPage!
+}
+
+"The pagination object for elements of type 'Guild'."
+type GuildPage {
+    "A cursor for elements coming after the current page."
+    after: String
+    "A cursor for elements coming before the current page."
+    before: String
+    "The elements of type 'Guild' in this page."
+    data: [Guild]!
+}
+
+type Mutation {
+    "Create a new document in the collection of 'Game'"
+    createGame(
+        "'Game' input values"
+        data: GameInput!
+    ): Game!
+    "Create a new document in the collection of 'Guild'"
+    createGuild(
+        "'Guild' input values"
+        data: GuildInput!
+    ): Guild!
+    "Create a new document in the collection of 'Stats'"
+    createStats(
+        "'Stats' input values"
+        data: StatsInput!
+    ): Stats!
+    "Create a new document in the collection of 'User'"
+    createUser(
+        "'User' input values"
+        data: UserInput!
+    ): User!
+    "Delete an existing document in the collection of 'Game'"
+    deleteGame(
+        "The 'Game' document's ID"
+        id: ID!
+    ): Game
+    "Delete an existing document in the collection of 'Guild'"
+    deleteGuild(
+        "The 'Guild' document's ID"
+        id: ID!
+    ): Guild
+    "Delete an existing document in the collection of 'Stats'"
+    deleteStats(
+        "The 'Stats' document's ID"
+        id: ID!
+    ): Stats
+    "Delete an existing document in the collection of 'User'"
+    deleteUser(
+        "The 'User' document's ID"
+        id: ID!
+    ): User
+    incrementStats(collection: String, connections: [ConnectionsInput], data: IncrementStatsInput, id: ID!): Stats!
+    "Update an existing document in the collection of 'Game'"
+    updateGame(
+        "'Game' input values"
+        data: GameInput!,
+        "The 'Game' document's ID"
+        id: ID!
+    ): Game
+    "Update an existing document in the collection of 'Guild'"
+    updateGuild(
+        "'Guild' input values"
+        data: GuildInput!,
+        "The 'Guild' document's ID"
+        id: ID!
+    ): Guild
+    "Update an existing document in the collection of 'Stats'"
+    updateStats(
+        "'Stats' input values"
+        data: StatsInput!,
+        "The 'Stats' document's ID"
+        id: ID!
+    ): Stats
+    "Update an existing document in the collection of 'User'"
+    updateUser(
+        "'User' input values"
+        data: UserInput!,
+        "The 'User' document's ID"
+        id: ID!
+    ): User
+    upsertGuild(collection: String, connections: [ConnectionsInput], data: UpsertGuildInput, id: ID!): Guild!
+}
+
+type Query {
+    allGuilds(
+        "The pagination cursor."
+        _cursor: String,
+        "The number of items to return per page."
+        _size: Int
+    ): GuildPage!
+    allStats(
+        "The pagination cursor."
+        _cursor: String,
+        "The number of items to return per page."
+        _size: Int
+    ): StatsPage!
+    allUsers(
+        "The pagination cursor."
+        _cursor: String,
+        "The number of items to return per page."
+        _size: Int
+    ): UserPage!
+    "Find a document from the collection of 'Game' by its id."
+    findGameByID(
+        "The 'Game' document's ID"
+        id: ID!
+    ): Game
+    "Find a document from the collection of 'Guild' by its id."
+    findGuildByID(
+        "The 'Guild' document's ID"
+        id: ID!
+    ): Guild
+    "Find a document from the collection of 'Stats' by its id."
+    findStatsByID(
+        "The 'Stats' document's ID"
+        id: ID!
+    ): Stats
+    "Find a document from the collection of 'User' by its id."
+    findUserByID(
+        "The 'User' document's ID"
+        id: ID!
+    ): User
+}
+
+type Stats {
+    "The document's ID."
+    _id: ID!
+    "The document's timestamp."
+    _ts: Long!
+    chugs: Int
+    drinks: Int
+    guilds(
+        "The pagination cursor."
+        _cursor: String,
+        "The number of items to return per page."
+        _size: Int
+    ): GuildPage!
+    user: User
+}
+
+"The pagination object for elements of type 'Stats'."
+type StatsPage {
+    "A cursor for elements coming after the current page."
+    after: String
+    "A cursor for elements coming before the current page."
+    before: String
+    "The elements of type 'Stats' in this page."
+    data: [Stats]!
+}
+
+type User {
+    "The document's ID."
+    _id: ID!
+    "The document's timestamp."
+    _ts: Long!
+    avatar: String
+    country: String
+    creationDate: Int
+    guilds(
+        "The pagination cursor."
+        _cursor: String,
+        "The number of items to return per page."
+        _size: Int
+    ): GuildPage!
+    id: ID!
+    name: String
+    stats: Stats
+    steamId: String
+    userName: String
+}
+
+"The pagination object for elements of type 'User'."
+type UserPage {
+    "A cursor for elements coming after the current page."
+    after: String
+    "A cursor for elements coming before the current page."
+    before: String
+    "The elements of type 'User' in this page."
+    data: [User]!
+}
+
+input CollectionsInput {
+    connectToCollection: String!
+    connectToId: ID!
+    fromIdName: String!
+    indexName: String!
+    toIdName: String!
+}
+
+input ConnectionsInput {
+    connectFromId: ID
+    connectToCollection: String!
+    connectToId: ID!
+    fromCollection: String
+    fromIdName: String!
+    indexName: String!
+    toCollection: String!
+    toIdName: String!
+}
+
+"'Game' input values"
+input GameInput {
+    genre: [GenreInput]
+    name: String
+}
+
+"'Genre' input values"
+input GenreInput {
+    name: String
+}
+
+"'Guild' input values"
+input GuildInput {
+    boundChannel: String
+    id: ID!
+    prefix: String
+    stats: GuildStatsRelation
+    users: GuildUsersRelation
+}
+
+"Allow manipulating the relationship between the types 'Guild' and 'Stats'."
+input GuildStatsRelation {
+    "Connect one or more documents of type 'Stats' with the current document using their IDs."
+    connect: [ID]
+    "Create one or more documents of type 'Stats' and associate them with the current document."
+    create: [StatsInput]
+    "Disconnect the given documents of type 'Stats' from the current document using their IDs."
+    disconnect: [ID]
+}
+
+"Allow manipulating the relationship between the types 'Guild' and 'User'."
+input GuildUsersRelation {
+    "Connect one or more documents of type 'User' with the current document using their IDs."
+    connect: [ID]
+    "Create one or more documents of type 'User' and associate them with the current document."
+    create: [UserInput]
+    "Disconnect the given documents of type 'User' from the current document using their IDs."
+    disconnect: [ID]
+}
+
+input IncrementStatsInput {
+    chugs: Int
+    drinks: Int
+}
+
+"Allow manipulating the relationship between the types 'Stats' and 'Guild'."
+input StatsGuildsRelation {
+    "Connect one or more documents of type 'Guild' with the current document using their IDs."
+    connect: [ID]
+    "Create one or more documents of type 'Guild' and associate them with the current document."
+    create: [GuildInput]
+    "Disconnect the given documents of type 'Guild' from the current document using their IDs."
+    disconnect: [ID]
+}
+
+"'Stats' input values"
+input StatsInput {
+    chugs: Int
+    drinks: Int
+    guilds: StatsGuildsRelation
+    user: StatsUserRelation
+}
+
+"Allow manipulating the relationship between the types 'Stats' and 'User' using the field 'Stats.user'."
+input StatsUserRelation {
+    "Connect a document of type 'User' with the current document using its ID."
+    connect: ID
+    "Create a document of type 'User' and associate it with the current document."
+    create: UserInput
+    "If true, disconnects this document from 'User'"
+    disconnect: Boolean
+}
+
+input UpsertGuildInput {
+    boundChannel: String
+    prefix: String
+}
+
+"Allow manipulating the relationship between the types 'User' and 'Guild'."
+input UserGuildsRelation {
+    "Connect one or more documents of type 'Guild' with the current document using their IDs."
+    connect: [ID]
+    "Create one or more documents of type 'Guild' and associate them with the current document."
+    create: [GuildInput]
+    "Disconnect the given documents of type 'Guild' from the current document using their IDs."
+    disconnect: [ID]
+}
+
+"'User' input values"
+input UserInput {
+    avatar: String
+    country: String
+    creationDate: Int
+    guilds: UserGuildsRelation
+    id: ID!
+    name: String
+    stats: UserStatsRelation
+    steamId: String
+    userName: String
+}
+
+"Allow manipulating the relationship between the types 'User' and 'Stats' using the field 'User.stats'."
+input UserStatsRelation {
+    "Connect a document of type 'Stats' with the current document using its ID."
+    connect: ID
+    "Create a document of type 'Stats' and associate it with the current document."
+    create: StatsInput
+    "If true, disconnects this document from 'Stats'"
+    disconnect: Boolean
+}
+
+
+scalar Date
+
+scalar Time
+
+"The `Long` scalar type represents non-fractional signed whole numeric values. Long can represent values between -(2^63) and 2^63 - 1."
+scalar Long

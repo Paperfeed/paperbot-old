@@ -1,0 +1,45 @@
+fragment StatsInfo on Stats {
+    chugs
+    drinks
+}
+
+fragment StatsPageInfo on StatsPage {
+    before
+    data {
+        ...StatsInfo
+    }
+    after
+}
+
+mutation upsertGuild($guildId: ID!, $data: UpsertGuildInput!, $connections: [ConnectionsInput]) {
+    upsertGuild(collection: "guilds", id: $guildId, data: $data, connections: $connections) {
+        prefix
+        boundChannel
+    }
+}
+
+mutation writeStatsToUser($userId: ID!, $data: IncrementStatsInput!, $connections: [ConnectionsInput]) {
+    incrementStats(collection: "stats", id: $userId, data: $data, connections: $connections) {
+        _id
+        ...StatsInfo
+    }
+}
+
+query getStatsByUser($userId: ID!) {
+    findStatsByID(id: $userId) {
+        ...StatsInfo
+    }
+}
+
+query getStatsByGuild($guildId: ID!) {
+    findGuildByID(id: $guildId) {
+        stats {
+            before
+            after
+            data {
+                _id
+                ...StatsInfo
+            }
+        }
+    }
+}

@@ -1,0 +1,46 @@
+fragment UserInfo on User {
+    id
+    avatar
+    country
+    creationDate
+    stats {
+        ...StatsInfo
+    }
+    steamId
+    userName
+}
+
+fragment UserPageInfo on UserPage {
+    before
+    data {
+        ...UserInfo
+    }
+    after
+}
+
+
+mutation createUser($user: UserInput!) {
+    createUser(data: $user) {
+        ...UserInfo
+    }
+}
+
+mutation updateUser($userId: ID!, $data: UserInput!) {
+    updateUser(id: $userId, data: $data) {
+        ...UserInfo
+    }
+}
+
+query findUser($userId: ID!) {
+    findUserByID(id: $userId) {
+        ...UserInfo
+    }
+}
+
+query findGuildUsers($guildId: ID!) {
+    findGuildByID(id: $guildId) {
+        users {
+            ...UserPageInfo
+        }
+    }
+}

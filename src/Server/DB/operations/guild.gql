@@ -1,0 +1,27 @@
+fragment GuildInfo on Guild {
+    boundChannel
+    prefix
+    stats {
+        ...StatsPageInfo
+    }
+}
+
+mutation upsertGuild($guildId: ID!, $data: UpsertGuildInput!, $connections: [ConnectionsInput]) {
+    upsertGuild(collection: "guilds", id: $guildId, data: $data, connections: $connections) {
+        prefix
+        boundChannel
+    }
+}
+
+query getGuild($guildId: ID!) {
+    findGuildByID(id: $guildId) {
+        ...GuildInfo
+    }
+}
+
+query getGuildSettings($guildId: ID!) {
+    findGuildByID(id: $guildId) {
+        boundChannel
+        prefix
+    }
+}

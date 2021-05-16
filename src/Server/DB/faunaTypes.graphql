@@ -1,0 +1,5 @@
+directive @collection(name: String) on OBJECT
+directive @embedded(name: String) on OBJECT
+directive @relation(name: String) on FIELD_DEFINITION
+directive @index(name: String) on FIELD_DEFINITION
+directive @resolver(name: String) on FIELD_DEFINITION
