@@ -15,15 +15,6 @@ import { Bussen } from './Games/Bussen/Bussen'
 import { IGDB } from './index'
 import { getRandomElement, ifArrayGetFirstItem } from './utils'
 
-enum Step {
-  REGISTRATION_CONFIRM_NAME,
-}
-
-interface StackItem {
-  step: Step
-  userId: string
-}
-
 interface Clients {
   discord: DiscordClient
   fauna: FaunaClient
@@ -32,7 +23,6 @@ interface Clients {
 }
 
 export class Paperbot {
-  historyStack: Array<StackItem>
   discord: DiscordClient
   steam: SteamAPI
   igdb: IGDB
@@ -46,7 +36,6 @@ export class Paperbot {
     this.discord = discord
     this.steam = steam
     this.igdb = igdb
-    this.historyStack = []
     this.fauna = fauna
 
     this.messageHandler = this.messageHandler.bind(this)
@@ -82,7 +71,7 @@ export class Paperbot {
     }
   }
 
-  public onUserCreated = async (userData: UserData) => {
+  public onUserCreated = async (userData: Partial<UserData>) => {
     const user = await this.discord.users.fetch(userData.id)
     const dm = await user.dmChannel.fetch()
 
@@ -129,7 +118,9 @@ export class Paperbot {
           this.discord.on('message', (message: Message) => {
             if (message.author.username === 'BoraEF') {
               message.reply(getRandomElement(BoraInsults))
-              this.fauna.writeToStats(message.author.id, { boraIsGay: 1 })
+              this.fauna.writeToStats(message.author.id, msg.guild.id, {
+                boraIsGay: 1,
+              })
             }
           })
           msg.reply('`Bora is gay mode activated`')

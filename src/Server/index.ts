@@ -110,7 +110,7 @@ fetchIGDBToken().then(async token => {
   server.get<Request>('/auth/steam/authenticate', async (request, response) => {
     try {
       const userId = request.query.userId
-      const userFromDB = await fauna.retrieveUser(userId).catch(() => null)
+      const userFromDB = await fauna.findUser(userId).catch(() => null)
       const user = await steam.Auth.authenticate(request)
 
       const dbUser = await fauna.createOrUpdateUser({
@@ -124,7 +124,7 @@ fetchIGDBToken().then(async token => {
       })
 
       if (!userFromDB) {
-        paperBot.onUserCreated(dbUser.data)
+        paperBot.onUserCreated(dbUser)
       }
 
       response.status(200).redirect('Successfully logged in')
