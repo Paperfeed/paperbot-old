@@ -40,6 +40,7 @@ export class Paperbot {
   games: Bussen[] = []
   boraIsGay = false
   timer: NodeJS.Timeout
+  prefixMap: Map<string, string> = new Map()
 
   constructor({ discord, fauna, igdb, steam }: Clients) {
     this.discord = discord
@@ -93,40 +94,24 @@ export class Paperbot {
 
   private async messageHandler(msg: Message): Promise<void> {
     if (msg.author.bot) return
+    let prefix = this.prefixMap.get(msg.guild?.id)
 
-    const unresolvedActions = this.historyStack.filter(
-      a => a.userId === msg.member.id,
-    )
-
-    if (unresolvedActions.length) {
-      console.log(
-        "Found unresolved action for this message's userId",
-        unresolvedActions,
-      )
-
-      for (const action of unresolvedActions) {
-        switch (action.step) {
-          case Step.REGISTRATION_CONFIRM_NAME:
-            if (/\b(yes|y|ye|yeah|ok)\b/i.test(msg.content)) {
-              // Code to add new user here
-            }
-            break
-        }
-
-        this.historyStack = this.historyStack.filter(a => a !== action)
-      }
+    if (!prefix && msg.guild) {
+      const settings = await this.fauna.getGuildSettings(msg.guild.id)
+      prefix = settings?.prefix || '!'
+      this.prefixMap.set(msg.guild.id, prefix)
+    } else if (prefix === undefined) {
+      prefix = '!'
     }
-
-    console.log(`Received message: ${msg.content}`)
 
     Object.keys(commands).some(key => {
       const command = commands[key as keyof typeof commands]
-      if (command.matcher(msg)) {
-        console.log(`which matched command [${key}]`)
+      if (command.matcher.bind(this)(prefix, msg)) {
+        console.log(`'${msg.content}' matched command '${key}'`)
         const parameters = command.parameterMatcher
           ? command.parameterMatcher(msg.content)
           : msg.content.match(/([^ ])+/gi)
-        command.fn.bind(this)(msg, parameters)
+        command.fn.bind(this)(prefix, msg, parameters)
         return command.stopPropagation
       }
     })

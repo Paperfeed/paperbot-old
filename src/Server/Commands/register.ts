@@ -3,13 +3,12 @@ import { MessageEmbed } from 'discord.js'
 import { Command } from './index'
 
 export const register = {
-  fn: async function (msg) {
+  fn: async function (prefix, msg) {
     const id = msg.author.id
+    const userFromDB = await this.fauna.findUser(id)
 
-    const userFromDB = await this.fauna.retrieveUser(id).catch(() => undefined)
-
-    if (userFromDB) {
-      msg.reply(`You're already registered as ${userFromDB.data.userName}`)
+    if (userFromDB.steamId) {
+      msg.reply(`You're already registered as ${userFromDB.userName}`)
       return
     }
 
@@ -92,5 +91,5 @@ export const register = {
       msg.reply('No user found, make sure your profile is set to public')
     }*/
   },
-  matcher: msg => msg.content.startsWith('!register'),
+  matcher: (prefix, msg) => msg.content.startsWith(`${prefix}register`),
 } as Command

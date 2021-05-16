@@ -7,7 +7,7 @@ import { Command } from './index'
 const PERMISSION_BIT = 37224000
 
 export const invite: Command = {
-  fn: async function (msg) {
+  fn: async function (prefix, msg) {
     if (msg.channel instanceof DMChannel) {
       const response = await this.discord.fetchApplication()
       msg.reply(
@@ -19,6 +19,6 @@ export const invite: Command = {
       )
     }
   },
-  matcher: msg => msg.content.startsWith('!invite'),
+  matcher: (prefix, msg) => msg.content.startsWith(`${prefix}invite`),
   stopPropagation: true,
 }
