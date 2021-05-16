@@ -26,7 +26,7 @@ export const stats = {
         }
         const stats = (Object.keys(s) as (keyof typeof s)[]).reduce(
           (string, key) => {
-            if (key !== '_id' && key !== '__typename')
+            if (key !== '_id' && key !== '__typename' && s[key])
               string += `${key}: ${s[key]}\n`
             return string
           },
