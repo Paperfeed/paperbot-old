@@ -40,7 +40,7 @@ export class Paperbot {
 
     this.messageHandler = this.messageHandler.bind(this)
 
-    this.timer = setInterval(this.onTick, 10000)
+    this.timer = setInterval(this.onTick, 60000)
 
     discord.on('message', this.messageHandler)
   }
@@ -52,12 +52,19 @@ export class Paperbot {
       time.getHours() === 0 &&
       time.getMinutes() === 0
     ) {
+      const channels = new Map()
       const connections: VoiceConnection[] = []
       for (const [, guild] of this.discord.guilds.cache) {
         const members = await guild.members.fetch()
         for (const [, member] of members) {
-          const connection = await member.voice?.channel?.join()
-          if (connection) connections.push(connection)
+          if (
+            member?.voice?.channel &&
+            !channels.has(member.voice.channel.id)
+          ) {
+            channels.set(member.voice.channel.id, true)
+            const connection = await member.voice?.channel?.join()
+            if (connection) connections.push(connection)
+          }
         }
       }
 
@@ -118,9 +125,9 @@ export class Paperbot {
           this.discord.on('message', (message: Message) => {
             if (message.author.username === 'BoraEF') {
               message.reply(getRandomElement(BoraInsults))
-              this.fauna.writeToStats(message.author.id, msg.guild.id, {
-                boraIsGay: 1,
-              })
+              // this.fauna.writeToStats(message.author.id, msg.guild.id, {
+              //   boraIsGay: 1,
+              // })
             }
           })
           msg.reply('`Bora is gay mode activated`')

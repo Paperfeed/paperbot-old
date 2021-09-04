@@ -17,6 +17,7 @@
   "dependencies": {
     "@discordjs/opus": "^0.5.0",
     "@graphql-codegen/typescript-graphql-request": "^3.1.1",
+    "@types/uuid": "^8.3.0",
     "canvas": "^2.7.0",
     "common-tags": "^1.8.0",
     "concurrently": "^6.0.2",
@@ -34,7 +35,9 @@
     "patch-package": "^6.4.7",
     "ramda": "^0.27.1",
     "ts-node": "^9.1.1",
-    "type-steamapi": "^0.9.46"
+    "type-steamapi": "^0.9.46",
+    "unique-names-generator": "^4.5.0",
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.13.16",

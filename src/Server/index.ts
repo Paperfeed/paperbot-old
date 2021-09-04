@@ -11,9 +11,13 @@ import fastifyStatic from 'fastify-static'
 import IGDB from 'igdb-api-node'
 import fetch from 'node-fetch'
 import path from 'path'
+import { Readable } from 'stream'
 
 import { SteamAPI } from './API/SteamAPI'
 import { FaunaClient } from './DB/FaunaClient'
+import { createDeck, drawCards } from './Games/Functional/Deck'
+import { PokerState } from './Games/Poker/Poker'
+import { renderPokerTable } from './Games/Poker/PokerCanvas'
 
 export type IGDB = ReturnType<typeof IGDB>
 
@@ -95,6 +99,104 @@ fetchIGDBToken().then(async token => {
     server.get<Request>('/getGame', async (request, response) => {
       const appId = request.query.appId
       response.send(await steam.getGameInfo(appId || '220')) // default appId: Half-Life 2
+    })
+
+    server.get('/poker', async (request, response) => {
+      const deck = createDeck()
+      const cards = drawCards(deck, 5, { hideOnDraw: true })
+      cards[0].flip()
+      const state: PokerState = {
+        cardsOnTable: cards,
+        dealer: {
+          avatar: '',
+          bet: 0,
+          cards: drawCards(deck, 2),
+          cash: 1000,
+          discord: {},
+          id: 'dealer',
+          name: 'Test 1',
+          tag: 'tag1',
+        },
+        dealerIndex: 1,
+        deck,
+        players: [
+          {
+            avatar: '',
+            bet: 0,
+            cards: drawCards(deck, 2),
+            cash: 1000,
+            discord: {},
+            id: 'player',
+            name: 'Test 1',
+            tag: 'tag1',
+          },
+          {
+            avatar: '',
+            bet: 0,
+            cards: drawCards(deck, 2),
+            cash: 1000,
+            discord: {},
+            id: 'dealer',
+            name: 'Test 2',
+            tag: 'tag1',
+          },
+          {
+            avatar: '',
+            bet: 12,
+            cards: drawCards(deck, 2),
+            cash: 1000,
+            discord: {},
+            id: '123',
+            name: 'Test 3',
+            tag: 'tag1',
+          },
+          {
+            avatar: '',
+            bet: 12,
+            cards: drawCards(deck, 2),
+            cash: 1000,
+            discord: {},
+            id: '123',
+            name: 'Test 4',
+            tag: 'tag1',
+          },
+          {
+            avatar: '',
+            bet: 12,
+            cards: drawCards(deck, 2),
+            cash: 1000,
+            discord: {},
+            id: '123',
+            name: 'Test 5',
+            tag: 'tag1',
+          },
+          {
+            avatar: '',
+            bet: 12,
+            cards: drawCards(deck, 2),
+            cash: 1000,
+            discord: {},
+            id: '123',
+            name: 'Lange naam',
+            tag: 'tag1',
+          },
+        ],
+        round: 1,
+      } as any
+
+      // await foreplay(state)
+      const buffer = await renderPokerTable(state, 'player')
+      // const buffer = await renderPokerCards(drawCards(deck, 2), {
+      //   label: 'Hole cards',
+      // })
+      const stream = new Readable({
+        read() {
+          this.push(buffer)
+          this.push(null)
+        },
+      })
+      response.type('image/png')
+      response.send(stream)
     })
   }
   // END

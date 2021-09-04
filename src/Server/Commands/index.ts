@@ -5,6 +5,7 @@ import { Paperbot } from '../Paperbot'
 export { bussen } from './bussen'
 export { invite } from './invite'
 export { paper } from './paper'
+export { poker } from './poker'
 export { register } from './register'
 export { stats } from './stats'
 
